@@ -1,0 +1,89 @@
+/* Dark theme styles */
+body.dark {
+  background-color: #181818; /* Deeper shade of grey */
+  color: #ffffff;
+}
+
+.container.dark {
+  background: linear-gradient(135deg, #2d2d2d, #1c1c1c); /* Softer gradients */
+}
+
+.info-section.dark {
+  background: linear-gradient(135deg, #3a3a3a, #292929);
+}
+
+.info-item.dark {
+  /* Adjust properties for the dark theme as needed */
+}
+
+.info-label.dark,
+.info-value.dark {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #888888
+  ); /* Lighter gradient end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Blue theme styles */
+body.blue {
+  background-color: #1a237e; /* Vibrant shade of blue */
+  color: #ffffff;
+}
+
+.container.blue {
+  background: linear-gradient(135deg, #283593, #1a237e);
+}
+
+.info-section.blue {
+  background: linear-gradient(135deg, #3949ab, #283593);
+}
+
+.info-label.blue,
+.info-value.blue {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #42a5f5
+  ); /* Brighter end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Red theme styles */
+body.red {
+  background-color: #d32f2f; /* Brighter red */
+  color: #ffffff;
+}
+
+.container.red {
+  background: linear-gradient(135deg, #ef5350, #d32f2f);
+}
+
+.info-section.red {
+  background: linear-gradient(135deg, #ff7043, #ef5350);
+}
+
+.info-label.red,
+.info-value.red {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #ffcdd2
+  ); /* Lighter red end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+  /* ... other reset styles as needed ... */
+}
+
+/* ... Continue adjusting styles for other elements in dark mode as needed ... */

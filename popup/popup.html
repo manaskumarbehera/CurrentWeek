@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Current Week Info</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="info-section">
+        <div class="info-row">
+          <div class="info-item">
+            <label for="dateInput" class="info-label">Date</label>
+            <input type="date" id="dateInput" />
+          </div>
+          <div class="info-item">
+            <label for="weekInput" class="info-label">Week</label>
+            <input
+              type="number"
+              id="weekInput"
+              min="1"
+              max="52"
+              placeholder="e.g. 5"
+            />
+          </div>
+          <div class="info-item">
+            <label for="resetButton" class="info-label">Today</label>
+            <input
+              type="button"
+              id="resetButton"
+              name="resetButton"
+              value="Click"
+            />
+          </div>
+          <div class="info-item">
+            <label for="dayDisplay" class="info-label">Day:</label>
+            <span id="dayDisplay" class="info-value"></span>
+          </div>
+          <div class="info-item">
+            <label for="iconColor" class="info-label">icon color</label>
+            <input
+              type="color"
+              id="iconColor"
+              name="iconColor"
+              value="#ffffff"
+            />
+          </div>
+        </div>
+        <div class="week-bar">
+          <span id="weekNumberDisplay" class="week-number"></span>
+          <div class="day" id="day1"></div>
+          <div class="day" id="day2"></div>
+          <div class="day" id="day3"></div>
+          <div class="day" id="day4"></div>
+          <div class="day" id="day5"></div>
+          <div class="day" id="day6"></div>
+          <div class="day" id="day7"></div>
+        </div>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

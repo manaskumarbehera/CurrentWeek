@@ -1,0 +1,458 @@
+/* Base Styles */
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background: #f5f5f5; /* A light gray background for the whole page */
+}
+
+.container {
+  padding: 20px;
+  border-radius: 12px;
+  width: 700px;
+  max-width: 1000px;
+  margin: 0 auto;
+  transition: background-color 0.3s, transform 0.3s;
+  animation: fadeIn 0.5s ease forwards;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* A little shadow for depth */
+  box-sizing: border-box;
+}
+
+.info-section {
+  display: flex;
+  flex-wrap: wrap; /* Allow items to wrap to next line */
+  flex-direction: column;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.info-item {
+  display: flex; /* Declare the display as flex */
+  min-width: 100px; /* You can adjust this as per requirement */
+  flex-direction: column; /* This ensures child elements stack vertically */
+  align-items: center; /* Adjust as needed, this aligns items to the start/left */
+  justify-content: center; /* This will vertically center the items */
+  margin-bottom: 5px; /* Add some spacing between info-items */
+  margin-right: 5px;
+  margin-left: 5px;
+  /*background-color: #a0c4ff; */
+}
+
+.info-label {
+  margin: 0 auto 5px; /* Top and bottom margin is 0, left and right margins are auto */
+  font-size: 0.9em;
+  font-weight: 500;
+  border-radius: 5px;
+  transition: transform 0.3s;
+  font-family: "Roboto", sans-serif; /* Use a modern sans-serif font */
+  text-transform: uppercase; /* Convert text to uppercase */
+  letter-spacing: 1.5px; /* Increase letter spacing */
+
+  color: #0f0e0e;
+  transition: transform 0.3s;
+  background: -webkit-linear-gradient(left, #0f0e0e, #757575);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  border-radius: 5px;
+  padding: 5px;
+}
+.info-value {
+  margin: 0;
+  font-size: 0.9em;
+  font-weight: 400;
+  border-radius: 5px;
+  color: #0f0e0e;
+  transition: transform 0.3s;
+  display: flex;
+  align-items: center; /* Vertically center aligns items within the flex container */
+  flex: 2;
+}
+
+.info-value {
+  padding: 2px 5px;
+  margin: 3px 0;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  transition: transform 0.3s;
+}
+
+/* Styling for color input, theme select dropdown */
+input[type="color"],
+#themeSelect {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 0.9em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Animations for fadeIn and pulse effects */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Hover effects for color input and theme select dropdown */
+input[type="color"]:hover,
+#themeSelect:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Focus effects for color input and theme select dropdown */
+input[type="color"]:focus,
+#themeSelect:focus {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+
+/* Hover effect for info-value */
+.info-value:hover {
+  animation: pulse 1s infinite;
+}
+
+/* Styling for info-row */
+.info-row {
+  display: flex;
+  flex-wrap: nowrap; /* Prevent wrapping within the info-row */
+  width: 100%; /* It will occupy the full width of its parent (info-section) */
+  box-sizing: border-box; /* Ensures padding and border are included in width */
+
+  flex-grow: 1; /* Allow it to grow according to the number of items it contains */
+  align-items: center;
+  padding: 5px 0;
+  border-top: 1px solid #f5f1f1;
+  margin-top: 10px;
+  border: 1px solid #f5f1f1;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(
+    135deg,
+    #f9f9f9,
+    #ededed
+  ); /* Yet another gradient for rows */
+}
+
+.info-row .info-label,
+.info-row .info-value {
+  flex: 1;
+}
+
+/* Styling for week-bar */
+.week-bar {
+  grid-column: span 2; /* This will make the week-bar span across two columns */
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  border-top: 4px solid #666666; /* Increased border width and darker color */
+  padding-top: 20px;
+  background-color: #e0e0e0;
+  border-radius: 12px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* More pronounced shadow */
+}
+
+/* Styling for each day in the week-bar */
+.day {
+  flex: 1;
+  display: flex; /* Added to enable flexbox */
+  justify-content: center; /* Horizontally center contents */
+  align-items: center; /* Vertically center contents */
+  padding: 5px;
+  height: 40px; /* Set a specific height for each day */
+  text-align: center;
+  margin: 0 2px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+}
+
+/* Assigning colors to each day */
+#day1 {
+  background-color: #ffadad; /* Sunday - Red */
+}
+
+#day2 {
+  background-color: #ffd6a5; /* Monday - Orange */
+}
+
+#day3 {
+  background-color: #fdffb6; /* Tuesday - Yellow */
+}
+
+#day4 {
+  background-color: #caffbf; /* Wednesday - Green */
+}
+
+#day5 {
+  background-color: #9bf6ff; /* Thursday - Blue */
+}
+
+#day6 {
+  background-color: #a0c4ff; /* Friday - Indigo */
+}
+
+#day7 {
+  background-color: #bdb2ff; /* Saturday - Purple */
+}
+
+/* Styling for weekInput, dateInput, and iconColor */
+#weekInput,
+#dateInput,
+#dayDisplay,
+#iconColor {
+  background-color: #e0e0e0; /* Light gray background */
+  border: 1px solid #b0b0b0; /* Slightly darker border for contrast */
+  padding: 5px 10px; /* Some padding for better appearance */
+  border-radius: 5px; /* Rounded corners */
+}
+
+/* Styling for week-number */
+.week-number {
+  display: inline-block;
+  background-color: #007bff; /* Blue background */
+  color: #ffffff; /* White text */
+  padding: 5px 10px; /* Padding around the text */
+  border-radius: 5px; /* Rounded corners */
+  font-weight: bold; /* Bold text */
+  margin-right: 10px; /* Space between the week number and the days */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* Slight shadow for depth */
+  transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+  margin-bottom: 10px;
+  margin-left: 10px;
+}
+
+/* Keyframes for blinking border */
+@keyframes blinkBorder {
+  0%,
+  100% {
+    border-color: #f2a8a8; /* Light red */
+  }
+  50% {
+    border-color: transparent;
+  }
+}
+
+/* Class to apply the blinking effect */
+.blink-border {
+  animation: blinkBorder 1s linear 3; /* Blink for 3 seconds */
+}
+
+/* Default input styling */
+input {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease; /* Smooth transition for focus effect */
+  border: 1px solid #ccc; /* Default border color */
+  padding: 5px 10px; /* Padding around the text */
+  border-radius: 5px; /* Rounded corners */
+  outline: none; /* Remove default browser outline */
+}
+
+/* Highlight effect when input is focused */
+input:focus {
+  box-shadow: 0 0 10px rgba(0, 127, 255, 0.5); /* Blue glow effect */
+  border-color: #007bff; /* Blue border color */
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0; /* This will make the element completely disappear */
+  }
+}
+
+.blinking {
+  animation: blink 1s linear infinite;
+}
+/* Hover effect for each day in the week-bar and weekNumberDisplay */
+.day:hover,
+.week-number:hover {
+  transform: scale(1.05); /* Slightly enlarge the element */
+  box-shadow: 0 49px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Focus effect for each day in the week-bar (in case they become focusable in the future) */
+.day:focus,
+.week-number:focus {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Add a more pronounced shadow */
+  outline: none; /* Remove default browser outline */
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 10px;
+
+  /* New styles for border */
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add a slight shadow for depth */
+}
+/* Styling for resetButton to look like weekInput and dateInput */
+#resetButton {
+  background-color: #e0e0e0; /* Light gray background, same as weekInput and dateInput */
+  border: 1px solid #b0b0b0; /* Slightly darker border for contrast, matching weekInput and dateInput */
+  padding: 5px 10px; /* Padding to match weekInput and dateInput */
+  border-radius: 5px; /* Rounded corners for consistency */
+  font-size: 0.8em; /* Smaller font size */
+  color: #333; /* Darker text color */
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease; /* Transition effects for focus and hover */
+}
+
+#resetButton:hover {
+  transform: scale(
+    1.05
+  ); /* Slight enlargement effect similar to the input hover effect */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow on hover */
+}
+
+#resetButton:focus {
+  box-shadow: 0 0 10px rgba(0, 127, 255, 0.5); /* Blue glow effect when focused, matching the input focus effect */
+  border-color: #007bff; /* Blue border color to match weekInput and dateInput focus effect */
+  outline: none; /* Remove default browser outline */
+}
+input[type="color"],
+input[type="text"],
+input[type="date"],
+.info-value span {
+  height: 30px; /* Ensures all elements have the same height */
+  border-radius: 4px; /* Consistent rounded corners */
+  border: 1px solid #ccc; /* Standard border for consistency */
+  padding: 5px; /* Standard padding */
+  box-sizing: border-box; /* Ensures padding doesn't affect the total width/height */
+}
+
+input[type="color"] {
+  border: none; /* Removes the default border for color input */
+  cursor: pointer; /* Indicates that this is a clickable input */
+  width: 50px; /* Specific width for color input */
+}
+
+input[type="text"],
+.info-value span {
+  width: 100%; /* Flexibility to adjust based on parent container */
+  max-width: 150px; /* Limit width to a reasonable maximum */
+}
+
+input[type="date"] {
+  width: 100%; /* Flexibility to adjust based on parent container */
+  max-width: 120px; /* Given the nature of date fields, this max width makes sense */
+}
+/**************************** Below are theme controlled from option.css  ******************************  */
+/* Dark theme styles */
+body.dark {
+  background-color: #181818; /* Deeper shade of grey */
+  color: #ffffff;
+}
+
+.container.dark {
+  background: linear-gradient(135deg, #2d2d2d, #1c1c1c); /* Softer gradients */
+}
+
+.info-section.dark {
+  background: linear-gradient(135deg, #3a3a3a, #292929);
+}
+
+.info-item.dark {
+  /* Adjust properties for the dark theme as needed */
+}
+
+.info-label.dark,
+.info-value.dark {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #888888
+  ); /* Lighter gradient end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Blue theme styles */
+body.blue {
+  background-color: #1a237e; /* Vibrant shade of blue */
+  color: #ffffff;
+}
+
+.container.blue {
+  background: linear-gradient(135deg, #283593, #1a237e);
+}
+
+.info-section.blue {
+  background: linear-gradient(135deg, #3949ab, #283593);
+}
+
+.info-label.blue,
+.info-value.blue {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #42a5f5
+  ); /* Brighter end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Red theme styles */
+body.red {
+  background-color: #d32f2f; /* Brighter red */
+  color: #ffffff;
+}
+
+.container.red {
+  background: linear-gradient(135deg, #ef5350, #d32f2f);
+}
+
+.info-section.red {
+  background: linear-gradient(135deg, #ff7043, #ef5350);
+}
+
+.info-label.red,
+.info-value.red {
+  color: #ffffff;
+  background: -webkit-linear-gradient(
+    left,
+    #ffffff,
+    #ffcdd2
+  ); /* Lighter red end color */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+  /* ... other reset styles as needed ... */
+}
+
+/* ... Continue adjusting styles for other elements in dark mode as needed ... */
