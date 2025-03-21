@@ -1,8 +1,11 @@
 // Utility function to calculate the current week number
 function getCurrentWeekNumber(date) {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date - firstDayOfYear) / (24 * 60 * 60 * 1000));
-  return Math.ceil(days / 7);
+  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = tempDate.getUTCDay() || 7; // Make Sunday = 7
+  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum); // Nearest Thursday
+  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -11,12 +14,10 @@ document.addEventListener("DOMContentLoaded", function () {
   let weekNumber = null; // Initialize weekNumber variable
 
   chrome.storage.sync.get(["iconColor"], function (items) {
-    const iconColor = items.iconColor || "#ffffff";
-    document.getElementById("iconColor").value = iconColor;
+    document.getElementById("iconColor").value = items.iconColor || "#ffffff";
 
     const now = new Date();
-    const formattedDate = now.toISOString().split("T")[0];
-    document.getElementById("dateInput").value = formattedDate;
+    document.getElementById("dateInput").value = now.toISOString().split("T")[0];
 
     const weekNumber = getCurrentWeekNumber(now);
     document.getElementById("weekInput").value = weekNumber;
@@ -100,16 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
       previousWeekNumber = weekNumber;
     }
   }
-
-  /*function displayWeekFromWeekNumber(
-    weekNumber,
-    updateWeekNumberDisplay = true
-  ) {
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-    const startOfWeek = new Date(startOfYear);
-    startOfWeek.setDate(startOfWeek.getDate() + (weekNumber - 1) * 7);
-    displayWeekFromDate(startOfWeek, updateWeekNumberDisplay);
-  } */
+  s
   function displayWeekFromWeekNumber(weekNumber) {
     const startOfYear = new Date(new Date().getFullYear(), 0, 1);
     let daysOffset = weekNumber * 7;

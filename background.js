@@ -1,8 +1,10 @@
 // Utility function to calculate the current week number
 function getCurrentWeekNumber(date) {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date - firstDayOfYear) / (24 * 60 * 60 * 1000));
-  return Math.ceil(days / 7);
+  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = tempDate.getUTCDay() || 7; // Make Sunday = 7
+  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum); // Nearest Thursday
+  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
 }
 
 function updateIcon(color) {
@@ -13,11 +15,7 @@ function updateIcon(color) {
     const canvas = new OffscreenCanvas(128, 128);
     const ctx = canvas.getContext("2d");
 
-    /*// Draw background
-    ctx.fillStyle = "lightgrey";
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
-    ctx.fill(); */
+
 
     // Draw text (week number)
     ctx.fillStyle = color;
@@ -58,7 +56,7 @@ chrome.runtime.onInstalled.addListener(function () {
   });
 });
 
-chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (message ) {
   if (message.action === "updateIcon") {
     updateIcon(message.color);
   }
