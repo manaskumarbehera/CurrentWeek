@@ -50,6 +50,7 @@ chrome.runtime.onStartup.addListener(function () {
   });
 });
 
+
 chrome.runtime.onInstalled.addListener(function () {
   chrome.storage.sync.get(["iconColor"], function (items) {
     updateIcon(items.iconColor);
