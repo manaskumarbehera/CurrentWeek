@@ -12,7 +12,6 @@ function getCurrentWeekNumber(date) {
 document.addEventListener("DOMContentLoaded", function () {
   let previousWeekNumber = null;
   let previousDayName = null;
-  let weekNumber = null; // Initialize weekNumber variable
 
   chrome.storage.sync.get(["iconColor"], function (items) {
     document.getElementById("iconColor").value = items.iconColor || "#ffffff";
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const weekInput = document.getElementById("weekInput");
     weekInput.value = currentWeekNumber;
 
-    // Reset week bar to the current week bar
+    // Reset week bar to the current week
     displayWeekFromWeekNumber(currentWeekNumber);
 
     // Update day display
@@ -81,10 +80,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const startOfWeek = new Date(date);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
 
+    const calculatedWeekNumber = getCurrentWeekNumber(startOfWeek);
+
     if (updateWeekNumberDisplay) {
-      const weekNumber = getCurrentWeekNumber(startOfWeek);
       document.getElementById("weekNumberDisplay").textContent =
-        "Week " + weekNumber;
+        "Week " + calculatedWeekNumber;
     }
 
     for (let i = 0; i < 7; i++) {
@@ -93,24 +93,29 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById(`day${i + 1}`).textContent = day.toDateString();
     }
 
-    if (previousWeekNumber !== weekNumber) {
+    if (previousWeekNumber !== calculatedWeekNumber) {
       const weekBarElement = document.querySelector(".week-bar");
       weekBarElement.classList.add("blinking");
       setTimeout(() => {
         weekBarElement.classList.remove("blinking");
       }, 3000);
-      previousWeekNumber = weekNumber;
+      previousWeekNumber = calculatedWeekNumber;
     }
   }
-  s
   function displayWeekFromWeekNumber(weekNumber) {
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-    let daysOffset = weekNumber * 7;
+    const year = new Date().getFullYear();
 
-    // Adjusting for the day of the week of start of year
-    daysOffset -= startOfYear.getDay() - 1;
-    const startOfWeek = new Date(startOfYear);
-    startOfWeek.setDate(startOfWeek.getDate() + daysOffset);
+    // Rough date for the requested week
+    const simple = new Date(year, 0, 1 + (weekNumber - 1) * 7);
+    const dayOfWeek = simple.getDay();
+    const startOfWeek = new Date(simple);
+
+    // Adjust to the Monday of that week (ISO-8601)
+    if (dayOfWeek <= 4) {
+      startOfWeek.setDate(simple.getDate() - dayOfWeek + 1);
+    } else {
+      startOfWeek.setDate(simple.getDate() + 8 - dayOfWeek);
+    }
 
     displayWeekFromDate(startOfWeek);
   }
