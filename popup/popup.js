@@ -101,6 +101,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }, 3000);
       previousWeekNumber = calculatedWeekNumber;
     }
+  function displayWeekFromWeekNumber(weekNumber) {
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    let daysOffset = weekNumber * 7;
+
+    // Adjusting for the day of the week of start of year
+    daysOffset -= startOfYear.getDay() - 1;
+    const startOfWeek = new Date(startOfYear);
+    startOfWeek.setDate(startOfWeek.getDate() + daysOffset);
+
+    displayWeekFromDate(startOfWeek);
   }
   function displayWeekFromWeekNumber(weekNumber) {
     const year = new Date().getFullYear();
