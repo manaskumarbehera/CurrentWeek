@@ -44,21 +44,27 @@ function updateIcon(color) {
   }
 }
 
-chrome.runtime.onStartup.addListener(function () {
-  chrome.storage.sync.get(["iconColor"], function (items) {
-    updateIcon(items.iconColor);
+if (typeof chrome !== "undefined" && chrome.runtime) {
+  chrome.runtime.onStartup.addListener(function () {
+    chrome.storage.sync.get(["iconColor"], function (items) {
+      updateIcon(items.iconColor);
+    });
   });
-});
 
-
-chrome.runtime.onInstalled.addListener(function () {
-  chrome.storage.sync.get(["iconColor"], function (items) {
-    updateIcon(items.iconColor);
+  chrome.runtime.onInstalled.addListener(function () {
+    chrome.storage.sync.get(["iconColor"], function (items) {
+      updateIcon(items.iconColor);
+    });
   });
-});
 
-chrome.runtime.onMessage.addListener(function (message ) {
-  if (message.action === "updateIcon") {
-    updateIcon(message.color);
-  }
-});
+  chrome.runtime.onMessage.addListener(function (message ) {
+    if (message.action === "updateIcon") {
+      updateIcon(message.color);
+    }
+  });
+}
+
+// Export for Node.js testing environments
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { getCurrentWeekNumber };
+}
