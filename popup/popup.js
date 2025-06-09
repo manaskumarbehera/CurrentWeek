@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const weekInput = document.getElementById("weekInput");
     weekInput.value = currentWeekNumber;
 
-    // Reset week bar to the current week bar
+    // Reset week bar to the current week
     displayWeekFromWeekNumber(currentWeekNumber);
 
     // Update day display
@@ -102,7 +102,6 @@ document.addEventListener("DOMContentLoaded", function () {
       previousWeekNumber = weekNumber;
     }
   }
-  s
   function displayWeekFromWeekNumber(weekNumber) {
     const startOfYear = new Date(new Date().getFullYear(), 0, 1);
     let daysOffset = weekNumber * 7;
