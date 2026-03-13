@@ -2,8 +2,8 @@
 node_modules/
 
 # ── Build output ─────────────────────────────────────────────────────────────
-# Created by `npm run package` — the zip is re-generated on demand, not stored in git
-dist/
+# `npm run package` writes <name>-<version>.zip (e.g. week-number-1.10.zip) to
+# the project root — re-generated on demand, not stored in git.
 *.zip
 
 # ── Test artefacts ───────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@
     "test:coverage": "jest --coverage",
     "list": "npm list --depth=0",
     "build": "npm test",
-    "package": "mkdir -p dist && zip -r dist/extension.zip manifest.json background.js popup/ options/ icons/ && echo 'Extension packaged → dist/extension.zip'"
+    "package": "node -e \"const m=require('./manifest.json'),f=m.name.toLowerCase().replace(/ /g,'-')+'-'+m.version+'.zip';require('child_process').execSync('zip -r '+JSON.stringify(f)+' manifest.json background.js popup/ options/ icons/',{stdio:'inherit'});console.log('Extension packaged → '+f)\""
   },
   "keywords": [],
   "author": "",

@@ -106,11 +106,11 @@ someone else.
 **File:** `.idea/runConfigurations/Package.xml`  
 **Command it runs:** `npm run package`
 
-Creates a `dist/extension.zip` file containing everything Chrome needs to run
-the extension:
+Reads the extension `name` and `version` from `manifest.json`, then creates a
+zip file **in the project root** named `<name>-<version>.zip`:
 
 ```
-dist/extension.zip
+week-number-1.10.zip        ← sits in the project root, ignored by .gitignore
   ├── manifest.json
   ├── background.js
   ├── popup/
@@ -125,6 +125,9 @@ dist/extension.zip
       ├── icon48.png
       └── icon128.png
 ```
+
+When you bump the version in `manifest.json` (e.g. `1.10` → `1.11`), the next
+run automatically produces `week-number-1.11.zip` — no manual rename needed.
 
 This zip is what you upload to the
 [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
@@ -178,7 +181,7 @@ The XML files are just launchers — the actual commands live in `package.json`:
 | `npm run test:coverage` | `jest --coverage` — tests + coverage report |
 | `npm run list` | `npm list --depth=0` — show installed packages |
 | `npm run build` | `npm test` — validation gate |
-| `npm run package` | `zip` — bundle the extension into `dist/extension.zip` |
+| `npm run package` | reads `manifest.json` → zips to `week-number-<version>.zip` in project root |
 
 You can run any of these directly in a terminal too — the IntelliJ configurations
 are just a convenient shortcut to avoid typing them out.
