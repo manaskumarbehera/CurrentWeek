@@ -7,6 +7,12 @@ function getCurrentWeekNumber(date) {
   return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
 }
 
+// Returns the ISO week count for a given year (52 or 53).
+// Dec 28 is always in the last ISO week of the year.
+function getISOWeeksInYear(year) {
+  return getCurrentWeekNumber(new Date(year, 11, 28));
+}
+
 function updateIcon(color) {
   try {
     const today = new Date();
@@ -47,13 +53,13 @@ function updateIcon(color) {
 if (typeof chrome !== "undefined" && chrome.runtime) {
   chrome.runtime.onStartup.addListener(function () {
     chrome.storage.sync.get(["iconColor"], function (items) {
-      updateIcon(items.iconColor);
+      updateIcon(items.iconColor || "#000000");
     });
   });
 
   chrome.runtime.onInstalled.addListener(function () {
     chrome.storage.sync.get(["iconColor"], function (items) {
-      updateIcon(items.iconColor);
+      updateIcon(items.iconColor || "#000000");
     });
   });
 
@@ -66,5 +72,5 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
 
 // Export for Node.js testing environments
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { getCurrentWeekNumber };
+  module.exports = { getCurrentWeekNumber, getISOWeeksInYear };
 }

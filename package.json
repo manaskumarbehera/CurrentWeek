@@ -4,7 +4,12 @@
   "description": "",
   "main": "background.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch --verbose",
+    "test:coverage": "jest --coverage",
+    "list": "npm list --depth=0",
+    "build": "npm test",
+    "package": "mkdir -p dist && zip -r dist/extension.zip manifest.json background.js popup/ options/ icons/ && echo 'Extension packaged → dist/extension.zip'"
   },
   "keywords": [],
   "author": "",

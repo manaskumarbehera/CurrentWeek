@@ -1,1 +1,30 @@
-node_modules
+# ── Node ────────────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Build output ─────────────────────────────────────────────────────────────
+# Created by `npm run package` — the zip is re-generated on demand, not stored in git
+dist/
+*.zip
+
+# ── Test artefacts ───────────────────────────────────────────────────────────
+# Created by `npm run test:coverage` — open coverage/lcov-report/index.html locally
+coverage/
+
+# ── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ── IntelliJ IDEA ────────────────────────────────────────────────────────────
+# Ignore personal/machine-specific IDE state …
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/git_toolbox_blame.xml
+.idea/git_toolbox_prj.xml
+.idea/copilot.data.migration.ask2agent.xml
+
+# … but KEEP .idea/runConfigurations/ so teammates get the npm run buttons
+# (nothing extra needed here — the folder is tracked by default once the
+#  lines above are the only .idea/* exclusions)
