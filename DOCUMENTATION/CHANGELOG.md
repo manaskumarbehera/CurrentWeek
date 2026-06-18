@@ -3,7 +3,7 @@
 All notable changes to the Week Number extension. The release pipeline gate
 expects a `## v<version>` heading for the version being released.
 
-## Unreleased
+## v1.12 — Footer UX polish (2026-06-18)
 
 - **Footer UX polish:** the days-left info is grouped into compact chips on the
   left, and Copy week / Copy date became compact icon buttons (# and calendar)
