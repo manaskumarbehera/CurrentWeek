@@ -1,0 +1,2 @@
+# Block a push that would fail CI: version consistency, lint, and tests.
+npm run check:versions && npm run lint && npm test

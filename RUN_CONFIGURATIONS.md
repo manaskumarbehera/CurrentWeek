@@ -30,6 +30,7 @@ That's it. Output appears in the **Run** panel at the bottom of the screen.
 ## The Six Configurations
 
 ### 1. `npm: test` — Run All Tests
+
 **File:** `.idea/runConfigurations/Test.xml`  
 **Command it runs:** `npm test` → `jest`
 
@@ -46,6 +47,7 @@ to check you haven't broken anything.
 ---
 
 ### 2. `npm: test:watch` — Tests in Watch Mode
+
 **File:** `.idea/runConfigurations/Test_Watch.xml`  
 **Command it runs:** `npm run test:watch` → `jest --watch --verbose`
 
@@ -59,6 +61,7 @@ Press `q` in the Run panel to stop it.
 ---
 
 ### 3. `npm: test:coverage` — Coverage Report
+
 **File:** `.idea/runConfigurations/Test_Coverage.xml`  
 **Command it runs:** `npm run test:coverage` → `jest --coverage`
 
@@ -77,40 +80,44 @@ All files|   100   |   100    |   100   |   100   |
 
 ---
 
-### 4. `npm: list` — Show Dependencies
-**File:** `.idea/runConfigurations/List.xml`  
-**Command it runs:** `npm run list` → `npm list --depth=0`
+### 4. `npm: validate` — Full CI Gate
 
-Prints a tree of the packages this project depends on (only the top level, not
-their sub-dependencies). Useful for a quick sanity check of what is installed.
+**File:** `.idea/runConfigurations/Validate.xml`  
+**Command it runs:** `npm run validate` → version check + `eslint .` + `jest`
+
+Runs the exact gate CI runs: confirms `manifest.json` and `package.json` agree
+on the version, lints, and runs all tests. Use this before committing or pushing.
 
 ```
-currentweek@1.0.0
-└── jest@29.7.0
+✅ Version check passed.
+   eslint .
+   Tests: 140 passed
 ```
 
 ---
 
-### 5. `npm: build` — Validate / Build Gate
+### 5. `npm: build` — Package Chrome + Edge zips
+
 **File:** `.idea/runConfigurations/Build.xml`  
-**Command it runs:** `npm run build` → `npm test`
+**Command it runs:** `npm run build` → `./build.sh`
 
-Because this extension has **no compilation step** (it loads raw `.js` files
-directly in Chrome), "build" means *"run all the tests to confirm nothing is
-broken"*. Use this as a final check before committing or handing the code to
-someone else.
+There is **no compilation step** (the browser loads raw `.js`). "build" packages
+the raw source into store-ready zips under `build/chrome/` and `build/edge/`,
+each with `manifest.json` at the zip root. Run `npm run validate` for the
+test/lint gate.
 
 ---
 
-### 6. `npm: package` — Package the Extension
-**File:** `.idea/runConfigurations/Package.xml`  
-**Command it runs:** `npm run package`
+### 6. `npm: package:chrome` — Package the Extension
 
-Reads the extension `name` and `version` from `manifest.json`, then creates a
-zip file **in the project root** named `<name>-<version>.zip`:
+**File:** `.idea/runConfigurations/Package.xml`  
+**Command it runs:** `npm run package:chrome` (→ `./build.sh chrome`)
+
+Reads the `version` from `manifest.json` and creates a store-ready zip under
+`build/chrome/` with `manifest.json` at the zip root:
 
 ```
-week-number-1.10.zip        ← sits in the project root, ignored by .gitignore
+build/chrome/week-number-v1.10-chrome.zip   ← ignored by .gitignore (build/, *.zip)
   ├── manifest.json
   ├── background.js
   ├── popup/
@@ -126,12 +133,14 @@ week-number-1.10.zip        ← sits in the project root, ignored by .gitignore
       └── icon128.png
 ```
 
-When you bump the version in `manifest.json` (e.g. `1.10` → `1.11`), the next
-run automatically produces `week-number-1.11.zip` — no manual rename needed.
+`./build.sh chrome edge` (or `npm run build`) produces both the Chrome and Edge
+zips at once under `build/<store>/`. When you bump the version in
+`manifest.json`, the filename tracks it automatically.
 
-This zip is what you upload to the
-[Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-to publish or update the extension.
+You can upload this zip by hand at the
+[Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole),
+but the normal path is the automated **Release (Chrome + Edge)** GitHub Actions
+workflow — see `DOCUMENTATION/RELEASE.md`.
 
 > **Note:** `tests/`, `node_modules/`, and other development-only files are
 > intentionally excluded from the zip — Chrome doesn't need them.
@@ -174,15 +183,15 @@ and IntelliJ will update the XML automatically.
 
 The XML files are just launchers — the actual commands live in `package.json`:
 
-| Script | What it runs |
-|--------|-------------|
-| `npm test` | `jest` — run all tests once |
-| `npm run test:watch` | `jest --watch --verbose` — re-run tests on save |
-| `npm run test:coverage` | `jest --coverage` — tests + coverage report |
-| `npm run list` | `npm list --depth=0` — show installed packages |
-| `npm run build` | `npm test` — validation gate |
-| `npm run package` | reads `manifest.json` → zips to `week-number-<version>.zip` in project root |
+| Script                   | What it runs                                                           |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `npm test`               | `jest` — run all tests once                                            |
+| `npm run test:watch`     | `jest --watch --verbose` — re-run tests on save                        |
+| `npm run test:coverage`  | `jest --coverage` — tests + coverage report                            |
+| `npm run validate`       | version check + lint + tests — the full CI gate                        |
+| `npm run lint`           | `eslint .`                                                             |
+| `npm run build`          | `./build.sh` — packages Chrome + Edge zips under `build/`              |
+| `npm run package:chrome` | `./build.sh chrome` → `build/chrome/week-number-v<version>-chrome.zip` |
 
 You can run any of these directly in a terminal too — the IntelliJ configurations
 are just a convenient shortcut to avoid typing them out.
-

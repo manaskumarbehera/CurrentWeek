@@ -1,0 +1,2 @@
+  gh secret set WEEK_EDGE_CLIENT_ID -R manaskumarbehera/CurrentWeek --body "961acbe9-3d71-4f1d-b229-b0ed1005fa6e"
+  gh secret set WEEK_EDGE_API_KEY  -R manaskumarbehera/CurrentWeek --body "eccqZ8bxZhuWl.a^3JG7j5i*yHH.*fhoD$U0oHd6"

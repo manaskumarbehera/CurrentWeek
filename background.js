@@ -1,76 +1,83 @@
-// Utility function to calculate the current week number
-function getCurrentWeekNumber(date) {
-  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = tempDate.getUTCDay() || 7; // Make Sunday = 7
-  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum); // Nearest Thursday
-  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
-  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
+// Shared ISO/US week math + settings (single sources of truth), bundled by Vite.
+import { getWeekNumber, weekStartDay } from "./week.js";
+import { getSettings } from "./settings.js";
+
+// Consume chrome.runtime.lastError so Chrome does not log an "unchecked
+// lastError" warning, without emitting anything ourselves.
+function swallowLastError() {
+  return void chrome.runtime.lastError;
 }
 
-// Returns the ISO week count for a given year (52 or 53).
-// Dec 28 is always in the last ISO week of the year.
-function getISOWeeksInYear(year) {
-  return getCurrentWeekNumber(new Date(year, 11, 28));
+// The current week number for the configured system.
+function currentWeekNumber(settings) {
+  const firstDay = weekStartDay(settings.weekSystem, settings.firstDayOfWeek);
+  return getWeekNumber(new Date(), settings.weekSystem, firstDay);
 }
 
-function updateIcon(color) {
+// Draw the week number onto the toolbar icon (icon mode).
+function drawIcon(weekNumber, color) {
+  const canvas = new OffscreenCanvas(128, 128);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = color;
+  ctx.font = "bold 100px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(`${weekNumber}`, canvas.width / 2, canvas.height / 2);
+  // Hand the pixels straight to setIcon as ImageData — the documented MV3 path.
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  chrome.action.setIcon({ imageData: { 128: imageData } }, swallowLastError);
+}
+
+// Render the toolbar from settings: either a drawn number or badge text.
+function renderToolbar(settings) {
   try {
-    const today = new Date();
-    const weekNumber = getCurrentWeekNumber(today); // Use the utility function
+    const weekNumber = currentWeekNumber(settings);
+    const name = (chrome.i18n && chrome.i18n.getMessage("extName")) || "Week Number";
+    chrome.action.setTitle({ title: `${name} : ${weekNumber}` });
 
-    const canvas = new OffscreenCanvas(128, 128);
-    const ctx = canvas.getContext("2d");
-
-
-
-    // Draw text (week number)
-    ctx.fillStyle = color;
-    ctx.font = "bold 100px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`${weekNumber}`, canvas.width / 2, canvas.height / 2);
-
-    // Convert to Blob, then to Data URL
-    canvas.convertToBlob({ type: "image/png" }).then((blob) => {
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        const dataUrl = reader.result;
-        chrome.action.setIcon({ path: { 48: dataUrl } }, () => {
-          if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
-          }
-        });
-      };
-      reader.readAsDataURL(blob);
-    });
-
-    chrome.action.setTitle({ title: `Week Number : ${weekNumber}` });
-  } catch (error) {
-    console.error("An error occurred:", error);
+    if (settings.iconMode === "badge") {
+      // Restore the static icon and overlay the number as badge text.
+      chrome.action.setIcon(
+        { path: { 48: "icons/icon48.png", 128: "icons/icon128.png" } },
+        swallowLastError
+      );
+      chrome.action.setBadgeText({ text: String(weekNumber) });
+      chrome.action.setBadgeBackgroundColor({ color: settings.iconColor || "#000000" });
+    } else {
+      chrome.action.setBadgeText({ text: "" }); // clear any badge from badge mode
+      drawIcon(weekNumber, settings.iconColor || "#000000");
+    }
+  } catch {
+    // Rendering failed (e.g. OffscreenCanvas unavailable) — nothing actionable.
   }
 }
 
 if (typeof chrome !== "undefined" && chrome.runtime) {
-  chrome.runtime.onStartup.addListener(function () {
-    chrome.storage.sync.get(["iconColor"], function (items) {
-      updateIcon(items.iconColor || "#000000");
-    });
-  });
+  // Re-render the toolbar from the freshly read settings.
+  function refreshToolbar() {
+    getSettings().then(renderToolbar);
+  }
 
-  chrome.runtime.onInstalled.addListener(function () {
-    chrome.storage.sync.get(["iconColor"], function (items) {
-      updateIcon(items.iconColor || "#000000");
-    });
-  });
+  chrome.runtime.onStartup.addListener(refreshToolbar);
+  chrome.runtime.onInstalled.addListener(refreshToolbar);
 
-  chrome.runtime.onMessage.addListener(function (message ) {
-    if (message.action === "updateIcon") {
-      updateIcon(message.color);
+  // Both the popup color picker ("updateIcon") and the options page
+  // ("refreshIcon") have already persisted their change — re-read and render.
+  chrome.runtime.onMessage.addListener(function (message) {
+    if (message && (message.action === "updateIcon" || message.action === "refreshIcon")) {
+      refreshToolbar();
     }
   });
-}
 
-// Export for Node.js testing environments
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { getCurrentWeekNumber, getISOWeeksInYear };
+  // The displayed week number changes at midnight / across week boundaries, but
+  // an MV3 service worker is ephemeral and setInterval would not survive its
+  // teardown. A persistent alarm wakes the worker to keep the toolbar current.
+  if (chrome.alarms) {
+    chrome.alarms.create("refreshWeekIcon", { periodInMinutes: 60 });
+    chrome.alarms.onAlarm.addListener(function (alarm) {
+      if (alarm.name === "refreshWeekIcon") {
+        refreshToolbar();
+      }
+    });
+  }
 }

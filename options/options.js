@@ -1,33 +1,41 @@
+import { getSettings, saveSettings } from "../settings.js";
+import { applyI18n, applyTheme, defaultTheme } from "../ui.js";
 
-document.getElementById("saveButton").addEventListener("click", function () {
-  const selectedTheme = document.getElementById("themeSelect").value;
-  chrome.storage.sync.set({ theme: selectedTheme }, function () {
-    alert("Settings saved.");
+document.addEventListener("DOMContentLoaded", () => {
+  applyI18n(document);
+
+  const themeSelect = document.getElementById("themeSelect");
+  const weekSystemSelect = document.getElementById("weekSystemSelect");
+  const firstDaySelect = document.getElementById("firstDaySelect");
+  const iconModeSelect = document.getElementById("iconModeSelect");
+  const statusEl = document.getElementById("status");
+
+  getSettings().then((s) => {
+    const theme = s.theme || defaultTheme();
+    themeSelect.value = theme;
+    weekSystemSelect.value = s.weekSystem;
+    firstDaySelect.value = String(s.firstDayOfWeek);
+    iconModeSelect.value = s.iconMode;
+    applyTheme(theme);
   });
-});
 
-document.getElementById("themeSelect").addEventListener("change", function () {
-  var theme = this.value;
-  var bodyElement = document.body;
+  // Live preview of the theme.
+  themeSelect.addEventListener("change", function () {
+    applyTheme(this.value);
+  });
 
-  // Reset classes
-  bodyElement.className = ""; // Clear all classes on the body
-
-  if (theme) {
-    bodyElement.classList.add(theme);
-  }
-});
-
-// Initialize the theme on page load
-window.addEventListener("DOMContentLoaded", () => {
-  chrome.storage.sync.get("theme", function (data) {
-    if (data.theme) {
-      document.body.classList.add(data.theme);
-      document.getElementById("themeSelect").value = data.theme;
-    } else {
-      // Default to light theme
-      document.body.classList.add("light");
-      document.getElementById("themeSelect").value = "light";
-    }
+  document.getElementById("saveButton").addEventListener("click", () => {
+    saveSettings({
+      theme: themeSelect.value,
+      weekSystem: weekSystemSelect.value,
+      firstDayOfWeek: parseInt(firstDaySelect.value, 10),
+      iconMode: iconModeSelect.value,
+    }).then(() => {
+      // Week system / first day / icon mode change the toolbar — ask the worker
+      // to re-render from the freshly saved settings.
+      chrome.runtime.sendMessage({ action: "refreshIcon" });
+      statusEl.textContent = chrome.i18n.getMessage("settingsSaved") || "Settings saved.";
+      setTimeout(() => (statusEl.textContent = ""), 2000);
+    });
   });
 });
