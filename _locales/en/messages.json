@@ -29,6 +29,10 @@
     "message": "$COUNT$ days",
     "placeholders": { "count": { "content": "$1" } }
   },
+  "yearOfProgress": {
+    "message": "$PCT$% through $YEAR$",
+    "placeholders": { "pct": { "content": "$1" }, "year": { "content": "$2" } }
+  },
   "optionsTitle": { "message": "Settings" },
   "themeLabel": { "message": "Theme" },
   "themeLight": { "message": "Light" },

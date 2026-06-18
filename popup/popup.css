@@ -196,6 +196,54 @@ body {
   color: var(--accent-contrast);
 }
 
+/* ── Year in weeks ────────────────────────────────────────────────────── */
+.year-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.year-strip {
+  display: grid;
+  grid-template-columns: repeat(27, 1fr);
+  gap: 2px;
+}
+
+.week-tick {
+  height: 12px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.week-tick:hover {
+  transform: scaleY(1.35);
+  background: var(--border);
+}
+
+/* Weeks already elapsed this year read as "filled". */
+.week-tick.is-past {
+  background: var(--border);
+}
+
+/* The week currently shown glows in the accent color. */
+.week-tick.is-current {
+  background: var(--accent);
+  transform: scaleY(1.5);
+}
+
+.year-progress {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Controls ─────────────────────────────────────────────────────────── */
 .controls {
   display: flex;

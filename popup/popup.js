@@ -9,6 +9,7 @@ import {
   daysLeftInWeek,
   daysLeftInYear,
   yearFromDateValue,
+  yearProgress,
 } from "../week.js";
 import { SETTINGS_DEFAULTS, getSettings, saveSettings } from "../settings.js";
 import { applyI18n, applyTheme, defaultTheme } from "../ui.js";
@@ -139,11 +140,53 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     updateDaysLeft(date, startOfWeek);
+    updateYearStrip(getActiveYear(), calculatedWeekNumber, date);
 
     if (previousWeekNumber !== calculatedWeekNumber) {
       blink(document.querySelector(".week-bar"));
       previousWeekNumber = calculatedWeekNumber;
     }
+  }
+
+  // "Year in weeks": one tick per week of `year`, the shown week glowing, every
+  // tick clickable to jump there. Rebuilt only when the year (or week count)
+  // changes; otherwise just the highlight is updated.
+  let stripYear = null;
+  function updateYearStrip(year, currentWeek, progressDate) {
+    const strip = document.getElementById("yearStrip");
+    const weeks = getWeeksInYear(year, weekSystem, weekStartDay());
+
+    if (stripYear !== year || strip.children.length !== weeks) {
+      strip.textContent = "";
+      for (let w = 1; w <= weeks; w++) {
+        const tick = document.createElement("button");
+        tick.type = "button";
+        tick.className = "week-tick";
+        tick.dataset.week = String(w);
+        tick.title = `Week ${w}`;
+        tick.addEventListener("click", () => jumpToWeek(w));
+        strip.appendChild(tick);
+      }
+      stripYear = year;
+    }
+
+    for (const tick of strip.children) {
+      const w = Number(tick.dataset.week);
+      tick.classList.toggle("is-current", w === currentWeek);
+      tick.classList.toggle("is-past", w < currentWeek);
+    }
+
+    const pct = yearProgress(progressDate);
+    document.getElementById("yearProgress").textContent =
+      chrome.i18n.getMessage("yearOfProgress", [String(pct), String(year)]) ||
+      `${pct}% through ${year}`;
+  }
+
+  // Jump the popup to a week via the existing week-input path.
+  function jumpToWeek(w) {
+    const weekInput = document.getElementById("weekInput");
+    weekInput.value = w;
+    handleWeekInputChange({ target: weekInput });
   }
 
   // Resolve a week number to its start within the active year, then render it.

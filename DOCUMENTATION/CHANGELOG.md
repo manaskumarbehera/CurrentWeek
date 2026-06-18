@@ -22,6 +22,10 @@ expects a `## v<version>` heading for the version being released.
 
 ### Features & UI
 
+- **"Year in weeks" strip** — a compact row of ticks (one per week of the active
+  year) under the day strip: the current week glows, elapsed weeks read as
+  filled, a "X% through YYYY" caption tracks year progress, and clicking any tick
+  jumps the popup to that week. Reuses the centralized week navigation.
 - **Week systems:** ISO 8601 (default) and US week-of-year, with a configurable
   first day of week (Options).
 - **Toolbar display:** drawn-number icon (existing) or **badge text** mode.

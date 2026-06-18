@@ -30,6 +30,8 @@ function buildDom() {
       <div class="day" id="day5"></div><div class="day" id="day6"></div>
       <div class="day" id="day7"></div>
     </div>
+    <div id="yearStrip"></div>
+    <div id="yearProgress"></div>
     <span id="daysLeftWeek"></span>
     <span id="daysLeftYear"></span>
     <button id="copyWeekBtn">Copy week</button>
@@ -169,6 +171,27 @@ describe("popup integration", () => {
     weekInput.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
     await flush();
     expect(weekInput.value).toBe("10");
+  });
+
+  test("year strip renders one tick per week, highlights current, and jumps on click", async () => {
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await flush();
+
+    const ticks = document.querySelectorAll("#yearStrip .week-tick");
+    // 52 or 53 ISO weeks in the current year.
+    expect(ticks.length).toBeGreaterThanOrEqual(52);
+    expect(ticks.length).toBeLessThanOrEqual(53);
+    // Exactly one tick is the current week, and the caption shows progress.
+    expect(document.querySelectorAll("#yearStrip .week-tick.is-current").length).toBe(1);
+    expect(document.getElementById("yearProgress").textContent).toMatch(/through \d{4}$/);
+
+    // Clicking week 7's tick navigates the popup to week 7.
+    document.querySelector('#yearStrip .week-tick[data-week="7"]').click();
+    await flush();
+    expect(document.getElementById("weekNumberDisplay").textContent).toBe("7");
+    expect(document.querySelector('#yearStrip .week-tick[data-week="7"]').classList).toContain(
+      "is-current"
+    );
   });
 
   test("an out-of-range week number is clamped to the year's max", async () => {

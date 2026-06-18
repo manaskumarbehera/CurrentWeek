@@ -147,3 +147,11 @@ export function yearFromDateValue(value, fallbackYear) {
   const year = value ? parseInt(String(value).slice(0, 4), 10) : NaN;
   return Number.isFinite(year) ? year : fallbackYear;
 }
+
+// Whole-percent of `date`'s calendar year elapsed (0 on Jan 1, never 100 before
+// the year flips). Drives the "year in weeks" progress caption.
+export function yearProgress(date) {
+  const start = new Date(date.getFullYear(), 0, 1);
+  const end = new Date(date.getFullYear() + 1, 0, 1);
+  return Math.floor(((stripTime(date) - start) / (end - start)) * 100);
+}

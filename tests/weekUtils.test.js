@@ -11,6 +11,7 @@ const {
   daysLeftInWeek,
   daysLeftInYear,
   yearFromDateValue,
+  yearProgress,
   getWeekStart,
 } = require("../week");
 
@@ -86,5 +87,20 @@ describe("yearFromDateValue", () => {
     expect(yearFromDateValue("", 2001)).toBe(2001);
     expect(yearFromDateValue(undefined, 2002)).toBe(2002);
     expect(yearFromDateValue(null, 2003)).toBe(2003);
+  });
+});
+
+describe("yearProgress", () => {
+  test("0 on Jan 1 and never 100 before the year flips", () => {
+    expect(yearProgress(new Date(2026, 0, 1))).toBe(0);
+    expect(yearProgress(new Date(2026, 11, 31))).toBe(99);
+  });
+  test("about half way at the start of July", () => {
+    const p = yearProgress(new Date(2026, 6, 2)); // Jul 2 2026
+    expect(p).toBeGreaterThanOrEqual(48);
+    expect(p).toBeLessThanOrEqual(51);
+  });
+  test("never reaches 100 within a leap year either", () => {
+    expect(yearProgress(new Date(2024, 11, 31))).toBeLessThan(100);
   });
 });
