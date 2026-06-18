@@ -5,6 +5,10 @@ expects a `## v<version>` heading for the version being released.
 
 ## v1.12 — Footer UX polish (2026-06-18)
 
+- **Packaging fix:** strip Vite's internal `.vite/manifest.json` (and source maps)
+  from the store ZIP — Edge rejects any package with more than one manifest.json.
+  Added a guard asserting exactly one manifest.json before zipping.
+
 - **Footer UX polish:** the days-left info is grouped into compact chips on the
   left, and Copy week / Copy date became compact icon buttons (# and calendar)
   on the right with tooltips, aria-labels, and a "Copied!" confirmation — fixes

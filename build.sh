@@ -33,6 +33,20 @@ if [ ! -f dist/manifest.json ]; then
     exit 1
 fi
 
+# Vite/CRXJS emits its own build manifest at dist/.vite/manifest.json. Edge
+# rejects any package containing more than one manifest.json, so drop Vite's
+# internal manifest (and any source maps) before packaging.
+rm -rf dist/.vite
+find dist -name '*.map' -delete
+
+# Guard: exactly one manifest.json must remain (the extension's, at the root).
+MANIFEST_COUNT=$(find dist -name manifest.json | wc -l | tr -d ' ')
+if [ "$MANIFEST_COUNT" != "1" ]; then
+    echo "❌ Expected exactly one manifest.json in dist/, found $MANIFEST_COUNT"
+    find dist -name manifest.json
+    exit 1
+fi
+
 # One MV3 build serves both stores — zip dist/ into each target package.
 for BROWSER in "${BROWSERS[@]}"; do
     ZIP_PATH="$BUILD_ROOT/$BROWSER/${NAME}-v${VERSION}-${BROWSER}.zip"
