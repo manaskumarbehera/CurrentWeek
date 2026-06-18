@@ -1,6 +1,6 @@
 {
   "name": "currentweek",
-  "version": "1.10",
+  "version": "1.11",
   "description": "Manifest V3 browser extension that shows the current ISO 8601 week number, day, and date.",
   "main": "background.js",
   "type": "commonjs",

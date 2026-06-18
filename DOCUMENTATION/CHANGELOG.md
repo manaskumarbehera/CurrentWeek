@@ -3,7 +3,7 @@
 All notable changes to the Week Number extension. The release pipeline gate
 expects a `## v<version>` heading for the version being released.
 
-## Unreleased
+## v1.11 — Tooling, fixes, features, modern UI, Vite migration (2026-06-18)
 
 ### Tooling
 
