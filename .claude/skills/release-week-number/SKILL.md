@@ -40,7 +40,7 @@ only. **Safe-by-default**: nothing publishes without a version bump on `main`
 
 - Chrome (configured): `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`,
   `CHROME_REFRESH_TOKEN`.
-- Edge (needed): `EDGE_CLIENT_ID`, `EDGE_API_KEY` (Partner Center → Publish API,
+- Edge (needed): `WEEK_EDGE_CLIENT_ID`, `WEEK_EDGE_API_KEY` (Partner Center → Publish API,
   v1.1 ApiKey auth; the Azure AD v1 flow was retired 2024-12-31).
 
 ## Troubleshooting

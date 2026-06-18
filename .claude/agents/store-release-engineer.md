@@ -34,7 +34,7 @@ browser automation, and never leaking secrets.
   `CHROME_REFRESH_TOKEN`. These are reused from the owner's other extension —
   the OAuth client is tied to the Google developer account, not one item, so it
   publishes to the Chrome extension ID above.
-- Edge (Partner Center Publish API v1.1): `EDGE_CLIENT_ID`, `EDGE_API_KEY`.
+- Edge (Partner Center Publish API v1.1): `WEEK_EDGE_CLIENT_ID`, `WEEK_EDGE_API_KEY`.
   Microsoft retired the Azure AD v1 flow on 2024-12-31; use ApiKey auth.
 
 ## Non-negotiables

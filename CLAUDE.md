@@ -69,4 +69,4 @@ setup and the safe-by-default publish model are in
 
 - Chrome Web Store ID: `hjbeeopedbnpahgbkndkemigkcellibm` (credentials configured)
 - Edge Add-ons product ID: `deb64eaf-a710-4ef6-9faa-84aac7fc037f` (needs
-  `EDGE_CLIENT_ID` + `EDGE_API_KEY` secrets)
+  `WEEK_EDGE_CLIENT_ID` + `WEEK_EDGE_API_KEY` secrets)

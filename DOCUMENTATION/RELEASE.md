@@ -39,17 +39,17 @@ Generated at **Partner Center → Publish API ("new experience", v1.1)**.
 Microsoft retired the old Azure AD (v1) flow on 2024-12-31, so only these two
 ApiKey-auth values are needed (no client secret / tenant):
 
-| Secret           | Notes                                       |
-| ---------------- | ------------------------------------------- |
-| `EDGE_CLIENT_ID` | Client ID from Partner Center → Publish API |
-| `EDGE_API_KEY`   | API key from Partner Center → Publish API   |
+| Secret                | Notes                                       |
+| --------------------- | ------------------------------------------- |
+| `WEEK_EDGE_CLIENT_ID` | Client ID from Partner Center → Publish API |
+| `WEEK_EDGE_API_KEY`   | API key from Partner Center → Publish API   |
 
 These exist as secrets on the sf-audit-extractor repo but GitHub secrets are
 write-only, so their values can't be copied automatically — set them by hand:
 
 ```bash
-gh secret set EDGE_CLIENT_ID -R manaskumarbehera/CurrentWeek --body "<client-id>"
-gh secret set EDGE_API_KEY  -R manaskumarbehera/CurrentWeek --body "<api-key>"
+gh secret set WEEK_EDGE_CLIENT_ID -R manaskumarbehera/CurrentWeek --body "<client-id>"
+gh secret set WEEK_EDGE_API_KEY  -R manaskumarbehera/CurrentWeek --body "<api-key>"
 ```
 
 ## Cutting a release

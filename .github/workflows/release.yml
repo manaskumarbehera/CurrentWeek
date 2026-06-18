@@ -19,9 +19,9 @@ name: Release (Chrome + Edge)
 #
 # REQUIRED SECRETS:
 #   Chrome  CHROME_CLIENT_ID, CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN
-#   Edge    EDGE_CLIENT_ID, EDGE_API_KEY
-# These are the same publisher-account credentials used by sf-audit-extractor —
-# the OAuth/API credentials are tied to the developer account, not a single
+#   Edge    WEEK_EDGE_CLIENT_ID, WEEK_EDGE_API_KEY
+# (Edge uses the WEEK_ prefix because plain EDGE_* names are taken by another
+# project's secrets.) Credentials are tied to the developer account, not a single
 # extension, so they publish to this extension's own IDs above.
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -107,8 +107,8 @@ jobs:
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
-          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_CLIENT_ID: ${{ secrets.WEEK_EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.WEEK_EDGE_API_KEY }}
         run: |
           CHROME=$( [ -n "$CHROME_CLIENT_ID" ] && [ -n "$CHROME_CLIENT_SECRET" ] && [ -n "$CHROME_REFRESH_TOKEN" ] && echo "true" || echo "false" )
           EDGE=$(   [ -n "$EDGE_CLIENT_ID" ] && [ -n "$EDGE_API_KEY" ] && echo "true" || echo "false" )
@@ -256,15 +256,15 @@ jobs:
 
       # Edge Add-ons Update REST API v1.1 — API-key auth (no Azure AD token).
       # Microsoft retired v1 (Azure AD client_credentials) on 2024-12-31.
-      #   EDGE_PRODUCT_ID — product GUID (env above)
-      #   EDGE_CLIENT_ID  — Client ID from Partner Center → Publish API
-      #   EDGE_API_KEY    — API key from Partner Center → Publish API (v1.1)
+      #   EDGE_PRODUCT_ID      — product GUID (env above, not a secret)
+      #   WEEK_EDGE_CLIENT_ID  — Client ID from Partner Center → Publish API
+      #   WEEK_EDGE_API_KEY    — API key from Partner Center → Publish API (v1.1)
       - name: Upload package to Edge Add-ons (v1.1)
         id: upload
         env:
           PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
-          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-          API_KEY: ${{ secrets.EDGE_API_KEY }}
+          CLIENT_ID: ${{ secrets.WEEK_EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.WEEK_EDGE_API_KEY }}
         run: |
           ZIP="${{ steps.zip.outputs.path }}"
           API="https://api.addons.microsoftedge.microsoft.com"
@@ -280,7 +280,7 @@ jobs:
           LOCATION=$(grep -i '^location:' "$HEADERS" | tail -1 | tr -d '\r' | sed 's/^[Ll]ocation:[[:space:]]*//')
           if [ "$HTTP_CODE" != "202" ]; then
             echo "Response body: $(cat "$BODY")"
-            echo "::error::Edge package upload failed (HTTP $HTTP_CODE) — check EDGE_CLIENT_ID / EDGE_API_KEY and the product ID"
+            echo "::error::Edge package upload failed (HTTP $HTTP_CODE) — check WEEK_EDGE_CLIENT_ID / WEEK_EDGE_API_KEY and the product ID"
             exit 1
           fi
           OP_ID=$(echo "$LOCATION" | sed -E 's#\?.*$##; s#/+$##; s#.*/##')
@@ -291,8 +291,8 @@ jobs:
       - name: Poll package upload status (v1.1)
         env:
           PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
-          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-          API_KEY: ${{ secrets.EDGE_API_KEY }}
+          CLIENT_ID: ${{ secrets.WEEK_EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.WEEK_EDGE_API_KEY }}
           OP_ID: ${{ steps.upload.outputs.operation_id }}
         run: |
           API="https://api.addons.microsoftedge.microsoft.com"
@@ -319,8 +319,8 @@ jobs:
       - name: Publish submission to Edge Add-ons (v1.1)
         env:
           PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
-          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
-          API_KEY: ${{ secrets.EDGE_API_KEY }}
+          CLIENT_ID: ${{ secrets.WEEK_EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.WEEK_EDGE_API_KEY }}
           VERSION: ${{ needs.validate-and-build.outputs.version }}
         run: |
           API="https://api.addons.microsoftedge.microsoft.com"
