@@ -123,7 +123,8 @@ describe("popup integration", () => {
     btn.click();
     await flush();
     expect(copied).toBe(document.getElementById("weekInput").value);
-    expect(btn.textContent).toBe("Copied!");
+    expect(btn.classList).toContain("copied");
+    expect(btn.dataset.copied).toBe("Copied!");
   });
 
   test("changing the date updates the week header (ISO week of Jan 1 2026 = 1)", async () => {

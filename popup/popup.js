@@ -235,13 +235,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function copyText(text, btn) {
     navigator.clipboard.writeText(String(text)).then(() => {
-      const original = btn.textContent;
-      btn.textContent = chrome.i18n.getMessage("copied") || "Copied!";
+      // Show a "Copied!" tooltip via CSS without disturbing the button's icon.
+      btn.dataset.copied = chrome.i18n.getMessage("copied") || "Copied!";
       btn.classList.add("copied");
-      setTimeout(() => {
-        btn.textContent = original;
-        btn.classList.remove("copied");
-      }, COPIED_MS);
+      setTimeout(() => btn.classList.remove("copied"), COPIED_MS);
     });
   }
 

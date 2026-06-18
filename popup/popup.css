@@ -354,28 +354,96 @@ input[type="color"] {
   border-color: #2e9e5b;
 }
 
-/* ── Footer ───────────────────────────────────────────────────────────── */
-.action-row {
+/* ── Footer: info chips (left) + copy actions (right), one tidy row ──────── */
+.footer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
 
+.stats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .chip {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  color: var(--text);
+  color: var(--muted);
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 3px 9px;
+  white-space: nowrap;
 }
 
-.action-row .spacer {
-  flex: 1 1 auto;
+.actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.icon-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.icon-btn.copied {
+  color: #2e9e5b;
+  border-color: #2e9e5b;
+}
+
+/* "Copied!" confirmation tooltip above the button. */
+.icon-btn.copied::after {
+  content: attr(data-copied);
+  position: absolute;
+  bottom: 124%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e9e5b;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ── Change highlight ─────────────────────────────────────────────────── */

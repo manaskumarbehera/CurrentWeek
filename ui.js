@@ -34,4 +34,11 @@ export function applyI18n(root) {
     const msg = chrome.i18n.getMessage(el.getAttribute("data-i18n-value"));
     if (msg) el.value = msg;
   });
+  root.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const msg = chrome.i18n.getMessage(el.getAttribute("data-i18n-title"));
+    if (msg) {
+      el.title = msg;
+      el.setAttribute("aria-label", msg);
+    }
+  });
 }
