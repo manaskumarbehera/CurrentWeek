@@ -1,18 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
-    <title>Options</title>
+    <meta charset="utf-8" />
+    <title data-i18n="optionsTitle">Settings</title>
     <link rel="stylesheet" href="options.css" />
   </head>
   <body>
-    <h2>Choose a theme:</h2>
-    <select id="themeSelect">
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-      <option value="blue">Blue</option>
-      <option value="red">Red</option>
-    </select>
-    <button id="saveButton">Save</button>
-    <script src="options.js"></script>
+    <h2 data-i18n="optionsTitle">Settings</h2>
+
+    <div class="field">
+      <label for="themeSelect" data-i18n="themeLabel">Theme</label>
+      <select id="themeSelect">
+        <option value="light" data-i18n="themeLight">Light</option>
+        <option value="dark" data-i18n="themeDark">Dark</option>
+        <option value="blue" data-i18n="themeBlue">Blue</option>
+        <option value="red" data-i18n="themeRed">Red</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="weekSystemSelect" data-i18n="weekSystemLabel">Week system</label>
+      <select id="weekSystemSelect">
+        <option value="iso" data-i18n="weekSystemIso">ISO 8601 (Mon start)</option>
+        <option value="us" data-i18n="weekSystemUs">US week-of-year</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="firstDaySelect" data-i18n="firstDayLabel">First day of week</label>
+      <select id="firstDaySelect">
+        <option value="1" data-i18n="firstDayMon">Monday</option>
+        <option value="0" data-i18n="firstDaySun">Sunday</option>
+      </select>
+      <p class="hint" data-i18n="firstDayHint">
+        Used for US weeks and the day row. ISO weeks always start Monday.
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="iconModeSelect" data-i18n="iconModeLabel">Toolbar display</label>
+      <select id="iconModeSelect">
+        <option value="icon" data-i18n="iconModeIcon">Drawn number (color)</option>
+        <option value="badge" data-i18n="iconModeBadge">Badge text</option>
+      </select>
+    </div>
+
+    <button id="saveButton" data-i18n="saveButton">Save</button>
+    <span id="status" class="status" role="status" aria-live="polite"></span>
+
+    <script type="module" src="options.js"></script>
   </body>
 </html>

@@ -1,62 +1,71 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <title>Current Week Info</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div class="container">
-      <div class="info-section">
-        <div class="info-row">
-          <div class="info-item">
-            <label for="dateInput" class="info-label">Date</label>
-            <input type="date" id="dateInput" />
-          </div>
-          <div class="info-item">
-            <label for="weekInput" class="info-label">Week</label>
-            <input
-              type="number"
-              id="weekInput"
-              min="1"
-              max="52"
-              placeholder="e.g. 5"
-            />
-          </div>
-          <div class="info-item">
-            <label for="resetButton" class="info-label">Today</label>
-            <input
-              type="button"
-              id="resetButton"
-              name="resetButton"
-              value="Click"
-            />
-          </div>
-          <div class="info-item">
-            <label for="dayDisplay" class="info-label">Day:</label>
-            <span id="dayDisplay" class="info-value"></span>
-          </div>
-          <div class="info-item">
-            <label for="iconColor" class="info-label">icon color</label>
-            <input
-              type="color"
-              id="iconColor"
-              name="iconColor"
-              value="#000000"
-            />
-          </div>
+    <main class="card">
+      <!-- Hero: big week number + the focused date/day -->
+      <header class="hero">
+        <div class="hero-week">
+          <span class="hero-kicker" data-i18n="labelWeek">Week</span>
+          <span id="weekNumberDisplay" class="hero-number">–</span>
         </div>
-        <div class="week-bar">
-          <span id="weekNumberDisplay" class="week-number"></span>
-          <div class="day" id="day1"></div>
-          <div class="day" id="day2"></div>
-          <div class="day" id="day3"></div>
-          <div class="day" id="day4"></div>
-          <div class="day" id="day5"></div>
-          <div class="day" id="day6"></div>
-          <div class="day" id="day7"></div>
+        <div class="hero-meta">
+          <div id="dayDisplay" class="hero-day"></div>
+          <div id="dateDisplay" class="hero-date"></div>
         </div>
-      </div>
-    </div>
-    <script src="popup.js"></script>
+      </header>
+
+      <!-- Day strip: Mon–Sun (or Sun–Sat), today highlighted -->
+      <section class="week-bar" aria-label="Days of the week">
+        <div class="day" id="day1"></div>
+        <div class="day" id="day2"></div>
+        <div class="day" id="day3"></div>
+        <div class="day" id="day4"></div>
+        <div class="day" id="day5"></div>
+        <div class="day" id="day6"></div>
+        <div class="day" id="day7"></div>
+      </section>
+
+      <!-- Controls -->
+      <section class="controls">
+        <div class="control">
+          <label for="dateInput" data-i18n="labelDate">Date</label>
+          <input type="date" id="dateInput" />
+        </div>
+        <div class="control control--narrow">
+          <label for="weekInput" data-i18n="labelWeek">Week</label>
+          <input type="number" id="weekInput" min="1" max="53" placeholder="5" />
+        </div>
+        <div class="control control--auto">
+          <span class="control-spacer"></span>
+          <button type="button" id="resetButton" class="btn btn--primary" data-i18n="labelToday">
+            Today
+          </button>
+        </div>
+        <div class="control control--narrow">
+          <label for="iconColor" data-i18n="labelIconColor">Icon color</label>
+          <input type="color" id="iconColor" value="#000000" />
+        </div>
+      </section>
+
+      <!-- Footer: days remaining + copy -->
+      <footer class="action-row">
+        <span id="daysLeftWeek" class="chip"></span>
+        <span id="daysLeftYear" class="chip"></span>
+        <span class="spacer"></span>
+        <button type="button" id="copyWeekBtn" class="btn btn--ghost" data-i18n="copyWeek">
+          Copy week
+        </button>
+        <button type="button" id="copyDateBtn" class="btn btn--ghost" data-i18n="copyDate">
+          Copy date
+        </button>
+      </footer>
+    </main>
+
+    <script type="module" src="popup.js"></script>
   </body>
 </html>

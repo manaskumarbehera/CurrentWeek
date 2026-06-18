@@ -1,10 +1,20 @@
 # ── Node ────────────────────────────────────────────────────────────────────
 node_modules/
 
+# ── Local-only config (secrets / per-developer overrides) ────────────────────
+.env
+.claude/settings.local.json
+
 # ── Build output ─────────────────────────────────────────────────────────────
-# `npm run package` writes <name>-<version>.zip (e.g. week-number-1.10.zip) to
-# the project root — re-generated on demand, not stored in git.
+# `./build.sh` writes store ZIPs to build/<browser>/, and the legacy
+# `npm run package` writes <name>-<version>.zip to the project root.
+# Both are re-generated on demand, not stored in git.
+build/
+dist/
 *.zip
+
+# Vite cache
+.vite/
 
 # ── Test artefacts ───────────────────────────────────────────────────────────
 # Created by `npm run test:coverage` — open coverage/lcov-report/index.html locally

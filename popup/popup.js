@@ -1,60 +1,98 @@
-// SYNC: keep identical to background.js
-function getCurrentWeekNumber(date) {
-  const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = tempDate.getUTCDay() || 7; // Make Sunday = 7
-  tempDate.setUTCDate(tempDate.getUTCDate() + 4 - dayNum); // Nearest Thursday
-  const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1));
-  return Math.ceil((((tempDate - yearStart) / 86400000) + 1) / 7);
-}
+import {
+  getWeekNumber,
+  getWeeksInYear,
+  getDateOfWeek,
+  getWeekStart,
+  weekStartDay as resolveWeekStartDay,
+  toLocalISODate,
+  sameYMD,
+  daysLeftInWeek,
+  daysLeftInYear,
+  yearFromDateValue,
+} from "../week.js";
+import { SETTINGS_DEFAULTS, getSettings, saveSettings } from "../settings.js";
+import { applyI18n, applyTheme, defaultTheme } from "../ui.js";
 
-// Returns the ISO week count for a given year (52 or 53).
-// Dec 28 is always in the last ISO week of the year.
-function getISOWeeksInYear(year) {
-  return getCurrentWeekNumber(new Date(year, 11, 28));
+const BLINK_MS = 2000; // how long the "value changed" highlight stays on
+const COPIED_MS = 1200; // how long a copy button shows its "Copied!" label
+const DEFAULT_ICON_COLOR = SETTINGS_DEFAULTS.iconColor;
+
+// "2 days" / "1 day", localized.
+function dayCountLabel(n) {
+  return n === 1
+    ? chrome.i18n.getMessage("dayOne") || "1 day"
+    : chrome.i18n.getMessage("dayMany", [String(n)]) || `${n} days`;
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  applyI18n(document);
+
   let previousWeekNumber = null;
   let previousDayName = null;
 
-  // Single initialization point: wait for storage before rendering anything
-  chrome.storage.sync.get(["iconColor"], function (items) {
-    document.getElementById("iconColor").value = items.iconColor || "#000000";
+  // Set from stored settings before the first render.
+  let weekSystem = SETTINGS_DEFAULTS.weekSystem;
+  let firstDayOfWeek = SETTINGS_DEFAULTS.firstDayOfWeek;
+
+  // The weekday a week starts on (centralized rule in week.js).
+  const weekStartDay = () => resolveWeekStartDay(weekSystem, firstDayOfWeek);
+
+  // The year a week number is resolved against — taken from the date field so
+  // navigation works for any year, not just the current one.
+  function getActiveYear() {
+    return yearFromDateValue(document.getElementById("dateInput").value, new Date().getFullYear());
+  }
+
+  function blink(el) {
+    el.classList.add("blinking");
+    setTimeout(() => el.classList.remove("blinking"), BLINK_MS);
+  }
+
+  // Single initialization point: wait for settings before rendering anything.
+  getSettings().then(function (s) {
+    weekSystem = s.weekSystem;
+    firstDayOfWeek = s.firstDayOfWeek;
+
+    document.getElementById("iconColor").value = s.iconColor || DEFAULT_ICON_COLOR;
+    applyTheme(s.theme || defaultTheme());
 
     const now = new Date();
-    document.getElementById("dateInput").value = now.toISOString().split("T")[0];
+    document.getElementById("dateInput").value = toLocalISODate(now);
+    document.getElementById("weekInput").max = getWeeksInYear(
+      now.getFullYear(),
+      weekSystem,
+      weekStartDay()
+    );
 
-    const weekNumber = getCurrentWeekNumber(now);
-    document.getElementById("weekInput").value = weekNumber;
-    document.getElementById("weekNumberDisplay").textContent = "Week " + weekNumber;
-
+    document.getElementById("weekInput").value = getWeekNumber(now, weekSystem, weekStartDay());
     updateDayName(now);
     displayWeekFromDate(now);
   });
 
-  const resetButton = document.getElementById("resetButton");
-  resetButton.addEventListener("click", function () {
+  document.getElementById("resetButton").addEventListener("click", function () {
     const today = new Date();
-    document.getElementById("dateInput").value = today.toISOString().split("T")[0];
-
-    const currentWeekNumber = getCurrentWeekNumber(today);
-    document.getElementById("weekInput").value = currentWeekNumber;
-
-    displayWeekFromWeekNumber(currentWeekNumber);
+    document.getElementById("dateInput").value = toLocalISODate(today);
+    document.getElementById("weekInput").value = getWeekNumber(today, weekSystem, weekStartDay());
+    displayWeekFromDate(today);
     updateDayName(today);
   });
 
   document.getElementById("iconColor").addEventListener("input", function (e) {
-    const color = e.target.value;
-    chrome.storage.sync.set({ iconColor: color }, function () {
-      chrome.runtime.sendMessage({ action: "updateIcon", color: color });
+    saveSettings({ iconColor: e.target.value }).then(() => {
+      chrome.runtime.sendMessage({ action: "updateIcon" });
     });
   });
 
   document.getElementById("dateInput").addEventListener("input", function (e) {
-    // Append T00:00:00 to parse as local midnight — plain "YYYY-MM-DD" is treated as
-    // UTC by the Date constructor and shifts the date in UTC-behind timezones.
+    if (!e.target.value) return; // ignore a cleared date field
+    // Append T00:00:00 to parse as local midnight — plain "YYYY-MM-DD" is treated
+    // as UTC by the Date constructor and shifts the date in UTC-behind timezones.
     const selectedDate = new Date(e.target.value + "T00:00:00");
+    document.getElementById("weekInput").max = getWeeksInYear(
+      selectedDate.getFullYear(),
+      weekSystem,
+      weekStartDay()
+    );
     displayWeekFromDate(selectedDate);
     updateDayName(selectedDate);
   });
@@ -71,53 +109,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.getElementById("weekInput").addEventListener("input", handleWeekInputChange);
 
-  function displayWeekFromDate(date, updateWeekNumberDisplay = true) {
-    const startOfWeek = new Date(date);
-    // (getDay()+6)%7 maps Mon=0 … Sun=6 so subtracting it always lands on Monday,
-    // including Sunday (old code: getDate()-0+1 advanced to *next* Monday).
-    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+  document.getElementById("copyWeekBtn").addEventListener("click", function () {
+    copyText(document.getElementById("weekInput").value, this);
+  });
+  document.getElementById("copyDateBtn").addEventListener("click", function () {
+    copyText(document.getElementById("dateInput").value, this);
+  });
 
-    const calculatedWeekNumber = getCurrentWeekNumber(startOfWeek);
+  function displayWeekFromDate(date, updateWeekNumberDisplay = true) {
+    const startOfWeek = getWeekStart(date, weekStartDay());
+    const calculatedWeekNumber = getWeekNumber(startOfWeek, weekSystem, weekStartDay());
 
     if (updateWeekNumberDisplay) {
-      document.getElementById("weekNumberDisplay").textContent =
-        "Week " + calculatedWeekNumber;
+      document.getElementById("weekNumberDisplay").textContent = calculatedWeekNumber;
     }
 
+    const today = new Date();
+    const wdFmt = new Intl.DateTimeFormat(navigator.language || "en", { weekday: "short" });
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
       day.setDate(day.getDate() + i);
-      document.getElementById(`day${i + 1}`).textContent = day.toDateString();
+      const cell = document.getElementById(`day${i + 1}`);
+      cell.innerHTML =
+        `<span class="day-wd">${wdFmt.format(day)}</span>` +
+        `<span class="day-dn">${day.getDate()}</span>`;
+      cell.title = day.toDateString();
+      cell.classList.toggle("is-today", sameYMD(day, today));
+      cell.classList.toggle("is-selected", sameYMD(day, date));
     }
+
+    updateDaysLeft(date, startOfWeek);
 
     if (previousWeekNumber !== calculatedWeekNumber) {
-      const weekBarElement = document.querySelector(".week-bar");
-      weekBarElement.classList.add("blinking");
-      setTimeout(() => {
-        weekBarElement.classList.remove("blinking");
-      }, 2000);
+      blink(document.querySelector(".week-bar"));
       previousWeekNumber = calculatedWeekNumber;
     }
-  } // end displayWeekFromDate
+  }
 
-  // Single canonical definition — ISO 8601 Monday-aligned.
-  // updateWeekNumberDisplay is forwarded to displayWeekFromDate so callers can
-  // suppress the header update when they have already set it themselves.
+  // Resolve a week number to its start within the active year, then render it.
   function displayWeekFromWeekNumber(weekNumber, updateWeekNumberDisplay = true) {
-    const year = new Date().getFullYear();
-
-    // Start with a rough date inside the requested week
-    const simple = new Date(year, 0, 1 + (weekNumber - 1) * 7);
-    const dayOfWeek = simple.getDay();
-    const startOfWeek = new Date(simple);
-
-    // Adjust to the Monday of that week (ISO-8601)
-    if (dayOfWeek <= 4) {
-      startOfWeek.setDate(simple.getDate() - dayOfWeek + 1);
-    } else {
-      startOfWeek.setDate(simple.getDate() + 8 - dayOfWeek);
-    }
-
+    const startOfWeek = getDateOfWeek(weekNumber, getActiveYear(), weekSystem, weekStartDay());
     displayWeekFromDate(startOfWeek, updateWeekNumberDisplay);
   }
 
@@ -125,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const weekInput = document.getElementById("weekInput");
     let weekNumber = parseInt(weekInput.value) || 0;
     weekNumber += delta;
-    const maxWeek = getISOWeeksInYear(new Date().getFullYear());
+    const maxWeek = getWeeksInYear(getActiveYear(), weekSystem, weekStartDay());
     weekNumber = Math.max(1, Math.min(maxWeek, weekNumber));
     weekInput.value = weekNumber;
     handleWeekInputChange({ target: weekInput });
@@ -133,20 +164,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleWeekInputChange(e) {
     const weekNumber = parseInt(e.target.value);
-    const maxWeek = getISOWeeksInYear(new Date().getFullYear());
+    const maxWeek = getWeeksInYear(getActiveYear(), weekSystem, weekStartDay());
     if (weekNumber >= 1 && weekNumber <= maxWeek) {
-      const weekNumberDisplayElement = document.getElementById("weekNumberDisplay");
-      weekNumberDisplayElement.textContent = "Week " + weekNumber;
-      weekNumberDisplayElement.classList.add("blinking");
-      setTimeout(() => {
-        weekNumberDisplayElement.classList.remove("blinking");
-      }, 2000);
-      // Pass false: header already updated above, don't double-set it
+      const display = document.getElementById("weekNumberDisplay");
+      display.textContent = weekNumber;
+      blink(display);
+      // Pass false: header already updated above, don't double-set it.
       displayWeekFromWeekNumber(weekNumber, false);
     } else {
-      // Silently clamp — alert() is unreliable inside extension popups
+      // Silently clamp — alert() is unreliable inside extension popups.
       e.target.value = Math.min(Math.max(weekNumber || 1, 1), maxWeek);
     }
+  }
+
+  // Days remaining in the current week and the current calendar year.
+  function updateDaysLeft(date, startOfWeek) {
+    const leftInWeek = daysLeftInWeek(date, startOfWeek);
+    const leftInYear = daysLeftInYear(date);
+
+    document.getElementById("daysLeftWeek").textContent =
+      chrome.i18n.getMessage("daysLeftWeek", [dayCountLabel(leftInWeek)]) ||
+      `${dayCountLabel(leftInWeek)} left in week`;
+    document.getElementById("daysLeftYear").textContent =
+      chrome.i18n.getMessage("daysLeftYear", [dayCountLabel(leftInYear)]) ||
+      `${dayCountLabel(leftInYear)} left in year`;
+  }
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(String(text)).then(() => {
+      const original = btn.textContent;
+      btn.textContent = chrome.i18n.getMessage("copied") || "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove("copied");
+      }, COPIED_MS);
+    });
   }
 
   function updateDayName(date) {
@@ -154,26 +207,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const dayName = new Intl.DateTimeFormat(language, { weekday: "long" }).format(date);
 
     if (previousDayName !== dayName) {
-      const dayDisplayElement = document.getElementById("dayDisplay");
-      dayDisplayElement.classList.add("blinking");
-      setTimeout(() => {
-        dayDisplayElement.classList.remove("blinking");
-      }, 2000);
+      blink(document.getElementById("dayDisplay"));
       previousDayName = dayName;
     }
-
     document.getElementById("dayDisplay").textContent = dayName;
-  }
-
-  chrome.storage.sync.get("theme", function (data) {
-    applyTheme(data.theme || "light");
-  });
-
-  function applyTheme(themeName) {
-    const bodyElement = document.body;
-    // Clear ALL theme classes (dark/light/blue/red) before applying the new one;
-    // old code only removed "dark" and "light", leaving "blue"/"red" behind.
-    bodyElement.className = "";
-    bodyElement.classList.add(themeName);
+    document.getElementById("dateDisplay").textContent = new Intl.DateTimeFormat(language, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
   }
 });

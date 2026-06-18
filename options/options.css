@@ -1,3 +1,45 @@
+/* Layout for the settings form */
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 16px 20px;
+  min-width: 280px;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.field select {
+  width: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+#saveButton {
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.status {
+  margin-left: 10px;
+  font-size: 0.85em;
+  color: #2e7d32;
+}
+
 /* Dark theme styles */
 body.dark {
   background-color: #181818; /* Deeper shade of grey */
@@ -19,11 +61,7 @@ body.dark {
 .info-label.dark,
 .info-value.dark {
   color: #ffffff;
-  background: -webkit-linear-gradient(
-    left,
-    #ffffff,
-    #888888
-  ); /* Lighter gradient end color */
+  background: -webkit-linear-gradient(left, #ffffff, #888888); /* Lighter gradient end color */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -45,11 +83,7 @@ body.blue {
 .info-label.blue,
 .info-value.blue {
   color: #ffffff;
-  background: -webkit-linear-gradient(
-    left,
-    #ffffff,
-    #42a5f5
-  ); /* Brighter end color */
+  background: -webkit-linear-gradient(left, #ffffff, #42a5f5); /* Brighter end color */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -71,11 +105,7 @@ body.red {
 .info-label.red,
 .info-value.red {
   color: #ffffff;
-  background: -webkit-linear-gradient(
-    left,
-    #ffffff,
-    #ffcdd2
-  ); /* Lighter red end color */
+  background: -webkit-linear-gradient(left, #ffffff, #ffcdd2); /* Lighter red end color */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

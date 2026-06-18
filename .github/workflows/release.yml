@@ -1,0 +1,359 @@
+name: Release (Chrome + Edge)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Tag/bump-driven release pipeline for the Week Number extension.
+#
+# ONE pipeline, TWO stores: Chrome Web Store and Edge Add-ons — built once by
+# ./build.sh, published behind explicit, secret-gated guards.
+#
+# SAFE BY DEFAULT — never publishes unless BOTH are true:
+#   1. Publish intent: a push to `main` that BUMPS manifest.json version, OR a
+#      manual run with dry_run=false. Manual default is dry_run=true (build only).
+#      A main push that does NOT change the version builds + validates only.
+#   2. The target store's credentials exist as repository secrets. Each publish
+#      step is additionally guarded, so a store with no credentials is skipped.
+#
+# PUBLIC IDS (not secret — visible in each store URL):
+#   Chrome extension ID : hjbeeopedbnpahgbkndkemigkcellibm
+#   Edge product ID     : deb64eaf-a710-4ef6-9faa-84aac7fc037f
+#
+# REQUIRED SECRETS:
+#   Chrome  CHROME_CLIENT_ID, CHROME_CLIENT_SECRET, CHROME_REFRESH_TOKEN
+#   Edge    EDGE_CLIENT_ID, EDGE_API_KEY
+# These are the same publisher-account credentials used by sf-audit-extractor —
+# the OAuth/API credentials are tied to the developer account, not a single
+# extension, so they publish to this extension's own IDs above.
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run — build & validate only, do NOT publish to any store'
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches: [main]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false # never cancel a release/publish in progress
+
+permissions:
+  contents: read
+
+env:
+  CHROME_EXTENSION_ID: hjbeeopedbnpahgbkndkemigkcellibm
+  EDGE_PRODUCT_ID: deb64eaf-a710-4ef6-9faa-84aac7fc037f
+
+jobs:
+  # ─── 1. Validate, gate, and build the Chrome + Edge ZIPs ──────────────────
+  validate-and-build:
+    name: Validate, gate & build (Chrome + Edge)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.intent.outputs.publish }}
+      chrome_ready: ${{ steps.store_flags.outputs.chrome_ready }}
+      edge_ready: ${{ steps.store_flags.outputs.edge_ready }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # need HEAD^ to diff manifest version on a main push
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── Determine publish intent (safe by default) ──────────────────────
+      - name: Determine publish intent
+        id: intent
+        run: |
+          EVENT="${{ github.event_name }}"
+          if [ "$EVENT" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "false" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "Publish intent: TRUE (manual dispatch, dry_run=false)"
+          elif [ "$EVENT" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            CUR=$(node -p "require('./manifest.json').version")
+            PREV=$(git show HEAD^:manifest.json 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" 2>/dev/null || echo "")
+            echo "manifest version: current=$CUR previous=${PREV:-<unreadable>}"
+            if [ -z "$PREV" ]; then
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              echo "Publish intent: FALSE (could not read previous version — fail closed)"
+            elif [ -n "$CUR" ] && [ "$CUR" != "$PREV" ]; then
+              echo "publish=true" >> "$GITHUB_OUTPUT"
+              echo "Publish intent: TRUE (main push bumped version $PREV → $CUR)"
+            else
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              echo "Publish intent: FALSE (main push, version unchanged at $CUR)"
+            fi
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Publish intent: FALSE (dry run — build & validate only)"
+          fi
+
+      # ── Evaluate per-store credential presence (secrets-aware) ──────────
+      - name: Evaluate store credentials
+        id: store_flags
+        env:
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: |
+          CHROME=$( [ -n "$CHROME_CLIENT_ID" ] && [ -n "$CHROME_CLIENT_SECRET" ] && [ -n "$CHROME_REFRESH_TOKEN" ] && echo "true" || echo "false" )
+          EDGE=$(   [ -n "$EDGE_CLIENT_ID" ] && [ -n "$EDGE_API_KEY" ] && echo "true" || echo "false" )
+          echo "chrome_ready=$CHROME" >> "$GITHUB_OUTPUT"
+          echo "edge_ready=$EDGE"     >> "$GITHUB_OUTPUT"
+          echo "Store credentials configured? chrome=$CHROME edge=$EDGE"
+
+      - name: Validate version consistency
+        run: node scripts/check-version-consistency.cjs
+
+      - name: Get version from manifest
+        id: version
+        run: |
+          VERSION=$(node -p "require('./manifest.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --ci
+
+      - name: Build Chrome + Edge packages
+        run: ./build.sh chrome edge # single invocation — build/ is cleaned once
+
+      - name: Verify Chrome + Edge ZIPs exist (manifest at root)
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MISSING=0
+          for B in chrome edge; do
+            ZIP="build/$B/week-number-v${VERSION}-${B}.zip"
+            if [ -f "$ZIP" ] && unzip -l "$ZIP" | grep -q 'manifest\.json$'; then
+              echo "  OK  $ZIP ($(du -h "$ZIP" | cut -f1))"
+            else
+              echo "::error::Missing or malformed ZIP: $ZIP"
+              MISSING=1
+            fi
+          done
+          [ "$MISSING" = "0" ] || exit 1
+
+      - name: Upload store ZIPs as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: week-number-v${{ steps.version.outputs.version }}-all-stores
+          path: build/*/week-number-*.zip
+          retention-days: 30
+
+      - name: Build summary
+        run: |
+          echo "### Release build summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: \`${{ steps.version.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Publish intent: \`${{ steps.intent.outputs.publish }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Chrome credentials: \`${{ steps.store_flags.outputs.chrome_ready }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Edge credentials: \`${{ steps.store_flags.outputs.edge_ready }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  # ─── 2. Publish: Chrome Web Store ─────────────────────────────────────────
+  publish-chrome:
+    name: Publish → Chrome Web Store
+    needs: validate-and-build
+    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.chrome_ready == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download store ZIPs
+        uses: actions/download-artifact@v4
+        with:
+          name: week-number-v${{ needs.validate-and-build.outputs.version }}-all-stores
+          path: build
+
+      - name: Locate Chrome ZIP
+        id: zip
+        run: |
+          ZIP="build/chrome/week-number-v${{ needs.validate-and-build.outputs.version }}-chrome.zip"
+          [ -f "$ZIP" ] || { echo "::error::Chrome ZIP not found: $ZIP"; exit 1; }
+          echo "path=$ZIP" >> "$GITHUB_OUTPUT"
+
+      - name: Obtain Chrome Web Store access token
+        id: token
+        env:
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+            -d "client_id=$CLIENT_ID" \
+            -d "client_secret=$CLIENT_SECRET" \
+            -d "refresh_token=$REFRESH_TOKEN" \
+            -d "grant_type=refresh_token")
+          TOKEN=$(echo "$RESPONSE" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).access_token" 2>/dev/null || echo "")
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Failed to obtain Chrome Web Store access token (refresh token expired/revoked?)"
+            echo "$RESPONSE" | sed 's/"access_token":"[^"]*"/"access_token":"[REDACTED]"/g'
+            exit 1
+          fi
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package to Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ env.CHROME_EXTENSION_ID }}
+          TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          ZIP="${{ steps.zip.outputs.path }}"
+          echo "Uploading $ZIP to Chrome Web Store item $EXTENSION_ID ..."
+          curl -s -f \
+            -X PUT "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${EXTENSION_ID}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -T "$ZIP"
+
+      - name: Publish on Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ env.CHROME_EXTENSION_ID }}
+          TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          curl -s -f \
+            -X POST "https://www.googleapis.com/chromewebstore/v1.1/items/${EXTENSION_ID}/publish" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Length: 0"
+          echo "Chrome Web Store: submitted for review."
+
+  # ─── 3. Publish: Edge Add-ons ─────────────────────────────────────────────
+  publish-edge:
+    name: Publish → Edge Add-ons
+    needs: validate-and-build
+    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.edge_ready == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download store ZIPs
+        uses: actions/download-artifact@v4
+        with:
+          name: week-number-v${{ needs.validate-and-build.outputs.version }}-all-stores
+          path: build
+
+      - name: Locate Edge ZIP
+        id: zip
+        run: |
+          ZIP="build/edge/week-number-v${{ needs.validate-and-build.outputs.version }}-edge.zip"
+          [ -f "$ZIP" ] || { echo "::error::Edge ZIP not found: $ZIP"; exit 1; }
+          echo "path=$ZIP" >> "$GITHUB_OUTPUT"
+
+      # Edge Add-ons Update REST API v1.1 — API-key auth (no Azure AD token).
+      # Microsoft retired v1 (Azure AD client_credentials) on 2024-12-31.
+      #   EDGE_PRODUCT_ID — product GUID (env above)
+      #   EDGE_CLIENT_ID  — Client ID from Partner Center → Publish API
+      #   EDGE_API_KEY    — API key from Partner Center → Publish API (v1.1)
+      - name: Upload package to Edge Add-ons (v1.1)
+        id: upload
+        env:
+          PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
+          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: |
+          ZIP="${{ steps.zip.outputs.path }}"
+          API="https://api.addons.microsoftedge.microsoft.com"
+          echo "Uploading $ZIP to Edge product $PRODUCT_ID ..."
+          HEADERS=$(mktemp); BODY=$(mktemp)
+          HTTP_CODE=$(curl -s -o "$BODY" -D "$HEADERS" -w "%{http_code}" \
+            -X POST "$API/v1/products/${PRODUCT_ID}/submissions/draft/package" \
+            -H "Authorization: ApiKey ${API_KEY}" \
+            -H "X-ClientID: ${CLIENT_ID}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @"$ZIP")
+          echo "Upload HTTP status: $HTTP_CODE"
+          LOCATION=$(grep -i '^location:' "$HEADERS" | tail -1 | tr -d '\r' | sed 's/^[Ll]ocation:[[:space:]]*//')
+          if [ "$HTTP_CODE" != "202" ]; then
+            echo "Response body: $(cat "$BODY")"
+            echo "::error::Edge package upload failed (HTTP $HTTP_CODE) — check EDGE_CLIENT_ID / EDGE_API_KEY and the product ID"
+            exit 1
+          fi
+          OP_ID=$(echo "$LOCATION" | sed -E 's#\?.*$##; s#/+$##; s#.*/##')
+          [ -n "$OP_ID" ] || { echo "::error::Could not parse operation ID from Location header"; exit 1; }
+          echo "operation_id=$OP_ID" >> "$GITHUB_OUTPUT"
+          echo "Upload accepted — operation $OP_ID"
+
+      - name: Poll package upload status (v1.1)
+        env:
+          PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
+          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.EDGE_API_KEY }}
+          OP_ID: ${{ steps.upload.outputs.operation_id }}
+        run: |
+          API="https://api.addons.microsoftedge.microsoft.com"
+          for i in $(seq 1 18); do
+            sleep 10
+            BODY=$(curl -s \
+              "$API/v1/products/${PRODUCT_ID}/submissions/draft/package/operations/${OP_ID}" \
+              -H "Authorization: ApiKey ${API_KEY}" \
+              -H "X-ClientID: ${CLIENT_ID}")
+            STATUS=$(echo "$BODY" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).status" 2>/dev/null || echo "Unknown")
+            echo "  Attempt $i/18: status = $STATUS"
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "Package validated."
+              exit 0
+            elif [ "$STATUS" = "Failed" ]; then
+              echo "::error::Edge package validation failed"
+              echo "$BODY"
+              exit 1
+            fi
+          done
+          echo "::error::Timed out waiting for Edge package validation"
+          exit 1
+
+      - name: Publish submission to Edge Add-ons (v1.1)
+        env:
+          PRODUCT_ID: ${{ env.EDGE_PRODUCT_ID }}
+          CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          API_KEY: ${{ secrets.EDGE_API_KEY }}
+          VERSION: ${{ needs.validate-and-build.outputs.version }}
+        run: |
+          API="https://api.addons.microsoftedge.microsoft.com"
+          echo "Publishing submission for product $PRODUCT_ID ..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "$API/v1/products/${PRODUCT_ID}/submissions" \
+            -H "Authorization: ApiKey ${API_KEY}" \
+            -H "X-ClientID: ${CLIENT_ID}" \
+            -H "Content-Type: application/json" \
+            -d "{\"notes\":\"Automated release v${VERSION}\"}")
+          echo "Publish HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" = "202" ]; then
+            echo "Edge Add-ons: submitted for review."
+          else
+            echo "::error::Edge publish failed (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+  # ─── 4. Dry-run notice (when nothing was published) ───────────────────────
+  dry-run-notice:
+    name: Dry-run notice
+    needs: validate-and-build
+    if: ${{ needs.validate-and-build.outputs.publish != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain dry run
+        run: |
+          echo "### Dry run — nothing published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "The Chrome + Edge ZIPs were built and validated and are available as workflow artifacts." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "To publish for real:" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Bump manifest.json version and push to main, OR" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Re-run this workflow via *Run workflow* with **dry_run = false**." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Each store publishes only if its credentials are configured as repository secrets." >> "$GITHUB_STEP_SUMMARY"

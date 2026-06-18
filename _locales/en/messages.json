@@ -1,0 +1,52 @@
+{
+  "extName": {
+    "message": "Week Number",
+    "description": "Extension name shown in the store and toolbar."
+  },
+  "extDesc": {
+    "message": "Show the current week number, day, and date — ISO 8601 or US week-of-year.",
+    "description": "Extension description."
+  },
+  "labelDate": { "message": "Date" },
+  "labelWeek": { "message": "Week" },
+  "labelToday": { "message": "Today" },
+  "btnToday": { "message": "Click" },
+  "labelDay": { "message": "Day:" },
+  "labelIconColor": { "message": "icon color" },
+  "copyWeek": { "message": "Copy week" },
+  "copyDate": { "message": "Copy date" },
+  "copied": { "message": "Copied!" },
+  "daysLeftWeek": {
+    "message": "$COUNT$ left in week",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "daysLeftYear": {
+    "message": "$COUNT$ left in year",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "dayOne": { "message": "1 day" },
+  "dayMany": {
+    "message": "$COUNT$ days",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "optionsTitle": { "message": "Settings" },
+  "themeLabel": { "message": "Theme" },
+  "themeLight": { "message": "Light" },
+  "themeDark": { "message": "Dark" },
+  "themeBlue": { "message": "Blue" },
+  "themeRed": { "message": "Red" },
+  "weekSystemLabel": { "message": "Week system" },
+  "weekSystemIso": { "message": "ISO 8601 (Mon start)" },
+  "weekSystemUs": { "message": "US week-of-year" },
+  "firstDayLabel": { "message": "First day of week" },
+  "firstDaySun": { "message": "Sunday" },
+  "firstDayMon": { "message": "Monday" },
+  "firstDayHint": {
+    "message": "Used for US weeks and the day row. ISO weeks always start Monday."
+  },
+  "iconModeLabel": { "message": "Toolbar display" },
+  "iconModeIcon": { "message": "Drawn number (color)" },
+  "iconModeBadge": { "message": "Badge text" },
+  "saveButton": { "message": "Save" },
+  "settingsSaved": { "message": "Settings saved." }
+}

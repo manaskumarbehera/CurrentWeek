@@ -1,0 +1,61 @@
+name: CI
+
+# Runs on every push and PR: validate version consistency, lint, test, and
+# confirm the Chrome + Edge packages build with manifest.json at the ZIP root.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Validate, lint, test & build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate version consistency (manifest == package.json)
+        run: node scripts/check-version-consistency.cjs
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --ci
+
+      - name: Build Chrome + Edge packages
+        run: ./build.sh chrome edge
+
+      - name: Verify ZIPs exist with manifest.json at root
+        run: |
+          VERSION=$(node -p "require('./manifest.json').version")
+          for B in chrome edge; do
+            ZIP="build/$B/week-number-v${VERSION}-${B}.zip"
+            [ -f "$ZIP" ] || { echo "::error::Missing ZIP: $ZIP"; exit 1; }
+            unzip -l "$ZIP" | grep -q 'manifest\.json$' \
+              || { echo "::error::manifest.json not at ZIP root in $ZIP"; exit 1; }
+            echo "  OK  $ZIP"
+          done
+
+      - name: Upload built packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: week-number-packages
+          path: build/*/week-number-*.zip
+          retention-days: 14
