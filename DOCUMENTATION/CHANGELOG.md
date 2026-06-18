@@ -3,6 +3,13 @@
 All notable changes to the Week Number extension. The release pipeline gate
 expects a `## v<version>` heading for the version being released.
 
+## Unreleased
+
+- **Footer UX polish:** the days-left info is grouped into compact chips on the
+  left, and Copy week / Copy date became compact icon buttons (# and calendar)
+  on the right with tooltips, aria-labels, and a "Copied!" confirmation — fixes
+  the ragged wrapping at the 320px popup width.
+
 ## v1.11 — Tooling, fixes, features, modern UI, Vite migration (2026-06-18)
 
 ### Tooling
