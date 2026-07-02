@@ -205,7 +205,10 @@ jobs:
             -d "client_secret=$CLIENT_SECRET" \
             -d "refresh_token=$REFRESH_TOKEN" \
             -d "grant_type=refresh_token")
-          TOKEN=$(echo "$RESPONSE" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).access_token" 2>/dev/null || echo "")
+          # `|| ''` inside node: a missing access_token must yield an empty string —
+          # bare node -p prints the literal "undefined", which passes the -z guard
+          # and becomes a bogus Bearer token (observed as 401s on upload).
+          TOKEN=$(echo "$RESPONSE" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).access_token || ''" 2>/dev/null || echo "")
           if [ -z "$TOKEN" ]; then
             echo "::error::Failed to obtain Chrome Web Store access token (refresh token expired/revoked?)"
             echo "$RESPONSE" | sed 's/"access_token":"[^"]*"/"access_token":"[REDACTED]"/g'
