@@ -19,7 +19,12 @@
     "build": "./build.sh",
     "package:chrome": "./build.sh chrome",
     "package:edge": "./build.sh edge",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release:chrome": "node scripts/release-chrome.mjs",
+    "release:chrome:dry": "node scripts/release-chrome.mjs --dry-run",
+    "release:edge": "node scripts/release-edge.mjs",
+    "release:edge:dry": "node scripts/release-edge.mjs --dry-run",
+    "release:stores": "node scripts/release-chrome.mjs && node scripts/release-edge.mjs"
   },
   "keywords": [
     "chrome-extension",
