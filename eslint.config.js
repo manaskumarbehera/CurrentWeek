@@ -71,9 +71,26 @@ module.exports = [
     },
   },
   {
+    // Release scripts — ES modules in a Node context; stdout is their purpose.
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...nodeGlobals,
+        fetch: "readonly",
+        URLSearchParams: "readonly",
+        setTimeout: "readonly",
+      },
+    },
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     // Dev tooling and tests — CommonJS. Their stdout is their purpose. Tests use
     // jsdom DOM globals, so include the browser set too.
-    files: ["scripts/**", "tests/**", "**/*.cjs", "eslint.config.js"],
+    files: ["scripts/**/*.cjs", "scripts/**/*.js", "tests/**", "**/*.cjs", "eslint.config.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "commonjs",

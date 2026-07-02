@@ -79,6 +79,24 @@ the ZIPs (uploaded as workflow artifacts) but publishes nothing.
 # build/edge/week-number-v<version>-edge.zip   (manifest.json at ZIP root)
 ```
 
+## Local publish (no CI needed)
+
+Ported from the owner's sf-audit-extractor tooling. Copy `.env.example` to
+`.env` (gitignored) and fill in the credentials — both stores' keys are
+developer-account-level and shared with the owner's other extensions.
+
+```bash
+npm run release:chrome:dry   # build + credential check, no upload
+npm run release:edge:dry     # build + credential probe, no upload
+npm run release:chrome       # build + upload + submit for review
+npm run release:edge         # build + upload + poll validation + submit
+npm run release:stores       # both stores
+# scripts accept --upload-only (draft, no review submission) and --no-build
+```
+
+The scripts print every store API error verbatim (no swallowed responses) and
+fail loudly if the OAuth exchange returns no token.
+
 ## Troubleshooting (seen in the wild)
 
 Learned during the v1.13 release (2026-07-02):
