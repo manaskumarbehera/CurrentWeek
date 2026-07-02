@@ -11,6 +11,7 @@ export const SETTINGS_DEFAULTS = {
   weekSystem: "iso", // "iso" | "us"
   firstDayOfWeek: 1, // 0 = Sunday, 1 = Monday
   iconMode: "icon", // "icon" (drawn number) | "badge" (badge text)
+  milestones: [], // [{ name: string, date: "YYYY-MM-DD" }] — popup countdowns
 };
 
 // Read all settings, merged over the defaults. Promise-based so callers can

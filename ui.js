@@ -41,4 +41,8 @@ export function applyI18n(root) {
       el.setAttribute("aria-label", msg);
     }
   });
+  root.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const msg = chrome.i18n.getMessage(el.getAttribute("data-i18n-placeholder"));
+    if (msg) el.placeholder = msg;
+  });
 }

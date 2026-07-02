@@ -10,6 +10,7 @@ const {
   sameYMD,
   daysLeftInWeek,
   daysLeftInYear,
+  daysUntil,
   yearFromDateValue,
   yearProgress,
   getWeekStart,
@@ -75,6 +76,24 @@ describe("daysLeftInYear", () => {
   });
   test("196 days left on Jun 18 2026", () => {
     expect(daysLeftInYear(new Date(2026, 5, 18))).toBe(196);
+  });
+});
+
+describe("daysUntil", () => {
+  test("0 on the same day, ignoring time of day", () => {
+    expect(daysUntil(new Date(2026, 6, 2, 23, 59), new Date(2026, 6, 2, 0, 1))).toBe(0);
+  });
+  test("positive for future dates, across month and year boundaries", () => {
+    expect(daysUntil(new Date(2026, 6, 12), new Date(2026, 6, 2))).toBe(10);
+    expect(daysUntil(new Date(2026, 7, 1), new Date(2026, 6, 31))).toBe(1);
+    expect(daysUntil(new Date(2027, 0, 1), new Date(2026, 11, 31))).toBe(1);
+  });
+  test("negative for past dates", () => {
+    expect(daysUntil(new Date(2026, 6, 1), new Date(2026, 6, 4))).toBe(-3);
+  });
+  test("unaffected by DST transitions (whole-day rounding)", () => {
+    // US DST starts Mar 8 2026 — the 23-hour day must still count as 1.
+    expect(daysUntil(new Date(2026, 2, 9), new Date(2026, 2, 7))).toBe(2);
   });
 });
 

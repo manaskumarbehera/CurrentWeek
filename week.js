@@ -142,6 +142,12 @@ export function daysLeftInYear(date) {
   return Math.max(0, Math.round((stripTime(endOfYear) - stripTime(date)) / 86400000));
 }
 
+// Whole days from `from` to `target` (0 = same day, negative = target is past).
+// Drives the milestone countdowns in the popup.
+export function daysUntil(target, from = new Date()) {
+  return Math.round((stripTime(target) - stripTime(from)) / 86400000);
+}
+
 // The 4-digit year from a "YYYY-MM-DD" input value, or `fallbackYear` if empty.
 export function yearFromDateValue(value, fallbackYear) {
   const year = value ? parseInt(String(value).slice(0, 4), 10) : NaN;

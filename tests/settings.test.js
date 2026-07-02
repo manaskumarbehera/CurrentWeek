@@ -33,6 +33,7 @@ describe("SETTINGS_DEFAULTS", () => {
       weekSystem: "iso",
       firstDayOfWeek: 1,
       iconMode: "icon",
+      milestones: [],
     });
   });
 });
