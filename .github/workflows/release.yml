@@ -33,6 +33,12 @@ on:
         required: false
         default: true
         type: boolean
+      stores:
+        description: 'Stores to publish (only used when dry_run=false) — lets one store be retried without re-submitting the other'
+        required: false
+        default: all
+        type: choice
+        options: [all, chrome, edge]
   push:
     branches: [main]
 
@@ -170,7 +176,7 @@ jobs:
   publish-chrome:
     name: Publish → Chrome Web Store
     needs: validate-and-build
-    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.chrome_ready == 'true' }}
+    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.chrome_ready == 'true' && (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'chrome') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -215,29 +221,45 @@ jobs:
         run: |
           ZIP="${{ steps.zip.outputs.path }}"
           echo "Uploading $ZIP to Chrome Web Store item $EXTENSION_ID ..."
-          curl -s -f \
+          HTTP=$(curl -s -o upload-response.json -w "%{http_code}" \
             -X PUT "https://www.googleapis.com/upload/chromewebstore/v1.1/items/${EXTENSION_ID}" \
             -H "Authorization: Bearer $TOKEN" \
             -H "x-goog-api-version: 2" \
-            -T "$ZIP"
+            -T "$ZIP")
+          echo "HTTP $HTTP"
+          cat upload-response.json; echo
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "::error::Chrome Web Store upload failed (HTTP $HTTP) — response above"
+            exit 1
+          fi
+          if ! grep -Eq '"uploadState": *"(SUCCESS|IN_PROGRESS)"' upload-response.json; then
+            echo "::error::Chrome Web Store upload state is not SUCCESS — response above"
+            exit 1
+          fi
 
       - name: Publish on Chrome Web Store
         env:
           EXTENSION_ID: ${{ env.CHROME_EXTENSION_ID }}
           TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          curl -s -f \
+          HTTP=$(curl -s -o publish-response.json -w "%{http_code}" \
             -X POST "https://www.googleapis.com/chromewebstore/v1.1/items/${EXTENSION_ID}/publish" \
             -H "Authorization: Bearer $TOKEN" \
             -H "x-goog-api-version: 2" \
-            -H "Content-Length: 0"
+            -H "Content-Length: 0")
+          echo "HTTP $HTTP"
+          cat publish-response.json; echo
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "::error::Chrome Web Store publish failed (HTTP $HTTP) — response above"
+            exit 1
+          fi
           echo "Chrome Web Store: submitted for review."
 
   # ─── 3. Publish: Edge Add-ons ─────────────────────────────────────────────
   publish-edge:
     name: Publish → Edge Add-ons
     needs: validate-and-build
-    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.edge_ready == 'true' }}
+    if: ${{ needs.validate-and-build.outputs.publish == 'true' && needs.validate-and-build.outputs.edge_ready == 'true' && (github.event_name != 'workflow_dispatch' || inputs.stores == 'all' || inputs.stores == 'edge') }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
