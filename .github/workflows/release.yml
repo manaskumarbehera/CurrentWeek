@@ -213,6 +213,9 @@ jobs:
           fi
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          # Diagnose (safe): print the token's scope/expiry/audience — never the token.
+          INFO=$(curl -s "https://oauth2.googleapis.com/tokeninfo?access_token=$TOKEN" || true)
+          echo "$INFO" | node -p "const i=JSON.parse(require('fs').readFileSync(0,'utf8')); \"tokeninfo: scope=\" + i.scope + \" expires_in=\" + i.expires_in + \" aud=\" + i.aud + \" error=\" + i.error_description" 2>/dev/null || echo "tokeninfo lookup failed"
 
       - name: Upload package to Chrome Web Store
         env:
