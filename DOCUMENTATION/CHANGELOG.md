@@ -3,6 +3,23 @@
 All notable changes to the Week Number extension. The release pipeline gate
 expects a `## v<version>` heading for the version being released.
 
+## v1.13 — Popup UX rework + Milestones (2026-07-02)
+
+- **Regrouped stats:** "N days left in week" now sits under the hero week
+  number; "N days left in year" joins the "% through year" caption under the
+  year strip — each stat next to its context.
+- **Inline copy buttons:** small copy icons beside the week number and the
+  date in the hero (the footer button row is gone).
+- **Compact controls:** Date + Week inputs, a round ↺ Today icon button, and
+  the icon color as a round swatch, all on a single row — the popup is
+  noticeably shorter.
+- **New — Milestones:** add a name + date and see a live countdown
+  ("44 days left" / "Today 🎉" / "3 days ago"). Sorted soonest-first,
+  removable with ×, synced across devices via `chrome.storage.sync`.
+- Under the hood: pure `daysUntil()` in `week.js`, `milestones` in
+  `SETTINGS_DEFAULTS`, `data-i18n-placeholder` support in `applyI18n`, new
+  locale strings, and new unit + DOM integration tests (222 total).
+
 ## v1.12 — Footer UX polish (2026-06-18)
 
 - **Packaging fix:** strip Vite's internal `.vite/manifest.json` (and source maps)
