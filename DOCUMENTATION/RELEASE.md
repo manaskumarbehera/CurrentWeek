@@ -78,3 +78,27 @@ the ZIPs (uploaded as workflow artifacts) but publishes nothing.
 # build/chrome/week-number-v<version>-chrome.zip
 # build/edge/week-number-v<version>-edge.zip   (manifest.json at ZIP root)
 ```
+
+## Troubleshooting (seen in the wild)
+
+Learned during the v1.13 release (2026-07-02):
+
+- **Chrome upload → `401 UNAUTHENTICATED` / "Invalid Credentials"** while the
+  token step "succeeds": the refresh-token exchange actually failed and the
+  workflow used the literal string `undefined` as the Bearer token (fixed —
+  the token step now fails loudly and prints the redacted exchange response).
+  Root cause both times: stale `CHROME_REFRESH_TOKEN`. Working credentials
+  live in the owner's other extension projects (e.g.
+  `~/IdeaProjects/sf-audit-extractor/.env` — same trio of
+  `CHROME_CLIENT_ID`/`CHROME_CLIENT_SECRET`/`CHROME_REFRESH_TOKEN`); the trio
+  must be replaced **together** (a refresh token only works with its own
+  client). Update via `gh secret set <NAME> -R manaskumarbehera/CurrentWeek`.
+- **Chrome publish → `400` "Publish condition not met … privacy information"**:
+  one-time manual step — open the item in the
+  [Developer Dashboard](https://chrome.google.com/webstore/devconsole), fill
+  the **Privacy practices** tab (single-purpose description + data-usage
+  certification), save, then re-run the publish. The uploaded draft is kept,
+  so re-running the workflow with `dry_run=false, stores=chrome` (or clicking
+  **Submit for review** in the console) finishes the release.
+- **Retrying one store only**: manual runs accept `stores=all|chrome|edge`,
+  so a failed store can be retried without re-submitting the other.
