@@ -12,6 +12,10 @@ const MSG = {
   dayOne: "1 day",
   dayMany: "$1 days",
   copied: "Copied!",
+  milestoneDaysLeft: "$1 left",
+  milestoneToday: "Today 🎉",
+  milestonePassed: "$1 ago",
+  removeMilestone: "Remove milestone",
 };
 const fmt = (s, subs) => (subs || []).reduce((a, v, i) => a.replace("$" + (i + 1), v), s);
 
@@ -35,7 +39,14 @@ function buildDom() {
     <span id="daysLeftWeek"></span>
     <span id="daysLeftYear"></span>
     <button id="copyWeekBtn">Copy week</button>
-    <button id="copyDateBtn">Copy date</button>`;
+    <button id="copyDateBtn">Copy date</button>
+    <button id="addMilestoneBtn"></button>
+    <ul id="milestoneList"></ul>
+    <form id="milestoneForm" hidden>
+      <input type="text" id="milestoneName" />
+      <input type="date" id="milestoneDate" />
+      <button type="submit"></button>
+    </form>`;
 }
 
 function stubChrome(store = {}) {
@@ -193,6 +204,55 @@ describe("popup integration", () => {
     expect(document.querySelector('#yearStrip .week-tick[data-week="7"]').classList).toContain(
       "is-current"
     );
+  });
+
+  test("adding a milestone renders a row with a days-left countdown and persists it", async () => {
+    const store = {};
+    stubChrome(store);
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await flush();
+
+    // Open the inline form and submit a milestone 10 days out.
+    document.getElementById("addMilestoneBtn").click();
+    const form = document.getElementById("milestoneForm");
+    expect(form.hidden).toBe(false);
+
+    const target = new Date();
+    target.setDate(target.getDate() + 10);
+    const pad = (n) => String(n).padStart(2, "0");
+    document.getElementById("milestoneName").value = "Launch";
+    document.getElementById("milestoneDate").value =
+      `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await flush();
+
+    const rows = document.querySelectorAll("#milestoneList .milestone");
+    expect(rows.length).toBe(1);
+    expect(rows[0].querySelector(".ms-name").textContent).toBe("Launch");
+    expect(rows[0].querySelector(".ms-days").textContent).toBe("10 days left");
+    expect(form.hidden).toBe(true);
+    expect(store.milestones).toEqual([{ name: "Launch", date: expect.any(String) }]);
+  });
+
+  test("stored milestones render on load and × removes them", async () => {
+    const today = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const iso = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+    const store = { milestones: [{ name: "Demo day", date: iso }] };
+    stubChrome(store);
+    document.dispatchEvent(new Event("DOMContentLoaded"));
+    await flush();
+
+    // A milestone dated today shows the "Today" state.
+    const row = document.querySelector("#milestoneList .milestone");
+    expect(row).not.toBeNull();
+    expect(row.querySelector(".ms-days").textContent).toBe("Today 🎉");
+    expect(row.querySelector(".ms-days").classList).toContain("is-today");
+
+    row.querySelector(".ms-del").click();
+    await flush();
+    expect(document.querySelectorAll("#milestoneList .milestone").length).toBe(0);
+    expect(store.milestones).toEqual([]);
   });
 
   test("an out-of-range week number is clamped to the year's max", async () => {

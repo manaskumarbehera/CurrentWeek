@@ -105,15 +105,28 @@ body {
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .hero {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--gap);
 }
 
 .hero-week {
   display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hero-week-top {
+  display: flex;
   align-items: baseline;
   gap: 8px;
+}
+
+/* "N days left in week" sits with the week number it belongs to. */
+.hero-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .hero-kicker {
@@ -141,10 +154,82 @@ body {
   font-weight: 600;
 }
 
+.hero-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 2px;
+}
+
 .hero-date {
   font-size: 0.82rem;
   color: var(--muted);
-  margin-top: 2px;
+}
+
+/* Small inline copy button — lives next to the value it copies. */
+.copy-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.copy-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.copy-btn:hover {
+  opacity: 1;
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.copy-btn.copied {
+  opacity: 1;
+  color: #2e9e5b;
+}
+
+/* "Copied!" confirmation tooltip above the button. */
+.copy-btn.copied::after {
+  content: attr(data-copied);
+  position: absolute;
+  bottom: 124%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e9e5b;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The hero-week copy button aligns to the big number's baseline. */
+.hero-week-top .copy-btn {
+  align-self: center;
 }
 
 /* ── Day strip ────────────────────────────────────────────────────────── */
@@ -237,35 +322,42 @@ body {
   transform: scaleY(1.5);
 }
 
+/* Year stats under the strip: days left (left) + % elapsed (right). */
+.year-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.year-days-left,
 .year-progress {
   font-size: 0.72rem;
   color: var(--muted);
-  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Controls ─────────────────────────────────────────────────────────── */
+/* ── Controls: everything on a single row ─────────────────────────────── */
 .controls {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
 }
 
 .control {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1 1 120px;
+}
+
+.control--date {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .control--narrow {
   flex: 0 0 auto;
-}
-
-.control--auto {
-  flex: 0 0 auto;
-  justify-content: flex-end;
 }
 
 .control label {
@@ -276,14 +368,11 @@ body {
   color: var(--muted);
 }
 
-.control-spacer {
-  height: 0.68rem;
-}
-
 input[type="date"],
 input[type="number"] {
   font: inherit;
-  padding: 7px 9px;
+  font-size: 0.85rem;
+  padding: 8px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);
@@ -292,8 +381,12 @@ input[type="number"] {
   transition: border-color 0.2s ease;
 }
 
+input[type="date"] {
+  width: 100%;
+}
+
 input[type="number"] {
-  width: 64px;
+  width: 52px;
   text-align: center;
 }
 
@@ -302,14 +395,35 @@ input[type="number"]:focus {
   border-color: var(--accent);
 }
 
+/* Round swatch instead of the boxy native color well. */
 input[type="color"] {
-  width: 40px;
-  height: 36px;
-  padding: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
   background: var(--surface-2);
   cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.12s ease;
+}
+
+input[type="color"]:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 4px;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
@@ -348,67 +462,19 @@ input[type="color"] {
   background: transparent;
 }
 
-.btn.copied {
-  background: #2e9e5b;
-  color: #fff;
-  border-color: #2e9e5b;
-}
-
-/* ── Footer: info chips (left) + copy actions (right), one tidy row ──────── */
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  border-top: 1px solid var(--border);
-  padding-top: 12px;
-}
-
-.stats {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.chip {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--muted);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 9px;
-  white-space: nowrap;
-}
-
-.actions {
-  display: flex;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-.icon-btn {
-  position: relative;
+/* Round icon-only button (the ↺ Today jump). */
+.btn--icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--muted);
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.1s ease;
+  border-radius: 50%;
 }
 
-.icon-btn svg {
+.btn--icon svg {
   width: 17px;
   height: 17px;
   fill: none;
@@ -418,32 +484,159 @@ input[type="color"] {
   stroke-linejoin: round;
 }
 
-.icon-btn:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: translateY(-1px);
+.btn--sm {
+  font-size: 0.76rem;
+  padding: 6px 10px;
 }
 
-.icon-btn.copied {
-  color: #2e9e5b;
+.btn.copied {
+  background: #2e9e5b;
+  color: #fff;
   border-color: #2e9e5b;
 }
 
-/* "Copied!" confirmation tooltip above the button. */
-.icon-btn.copied::after {
-  content: attr(data-copied);
-  position: absolute;
-  bottom: 124%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #2e9e5b;
-  color: #fff;
-  font-size: 0.62rem;
+/* ── Milestones: user countdowns (name + date → days left) ────────────── */
+.milestones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.milestones-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-label {
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.milestone-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.milestone-list:empty {
+  display: none;
+}
+
+.milestone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.ms-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
   white-space: nowrap;
-  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ms-date {
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.ms-days {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-days.is-today {
+  color: #2e9e5b;
+}
+
+.ms-days.is-past {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.ms-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.5;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.milestone:hover .ms-del,
+.ms-del:focus-visible {
+  opacity: 1;
+}
+
+.ms-del:hover {
+  color: #d64545;
+  background: var(--surface);
+}
+
+.milestone-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.milestone-form[hidden] {
+  display: none;
+}
+
+.milestone-form input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.milestone-form input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.milestone-form input[type="date"] {
+  font-size: 0.78rem;
+  padding: 6px;
+  width: 116px;
 }
 
 /* ── Change highlight ─────────────────────────────────────────────────── */

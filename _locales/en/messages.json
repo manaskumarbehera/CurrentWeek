@@ -33,6 +33,20 @@
     "message": "$PCT$% through $YEAR$",
     "placeholders": { "pct": { "content": "$1" }, "year": { "content": "$2" } }
   },
+  "milestonesLabel": { "message": "Milestones" },
+  "addMilestone": { "message": "Add milestone" },
+  "milestoneNamePlaceholder": { "message": "e.g. Launch" },
+  "milestoneAdd": { "message": "Add" },
+  "milestoneDaysLeft": {
+    "message": "$COUNT$ left",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "milestoneToday": { "message": "Today 🎉" },
+  "milestonePassed": {
+    "message": "$COUNT$ ago",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "removeMilestone": { "message": "Remove milestone" },
   "optionsTitle": { "message": "Settings" },
   "themeLabel": { "message": "Theme" },
   "themeLight": { "message": "Light" },

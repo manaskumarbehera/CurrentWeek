@@ -8,6 +8,7 @@ import {
   sameYMD,
   daysLeftInWeek,
   daysLeftInYear,
+  daysUntil,
   yearFromDateValue,
   yearProgress,
 } from "../week.js";
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Set from stored settings before the first render.
   let weekSystem = SETTINGS_DEFAULTS.weekSystem;
   let firstDayOfWeek = SETTINGS_DEFAULTS.firstDayOfWeek;
+  let milestones = SETTINGS_DEFAULTS.milestones;
 
   // The weekday a week starts on (centralized rule in week.js).
   const weekStartDay = () => resolveWeekStartDay(weekSystem, firstDayOfWeek);
@@ -68,6 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("weekInput").value = getWeekNumber(now, weekSystem, weekStartDay());
     updateDayName(now);
     displayWeekFromDate(now);
+
+    milestones = Array.isArray(s.milestones) ? s.milestones : [];
+    renderMilestones();
   });
 
   document.getElementById("resetButton").addEventListener("click", function () {
@@ -116,6 +121,97 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("copyDateBtn").addEventListener("click", function () {
     copyText(document.getElementById("dateInput").value, this);
   });
+
+  // ── Milestones: add via the inline form, remove via ×, persisted in sync ──
+  const milestoneForm = document.getElementById("milestoneForm");
+
+  document.getElementById("addMilestoneBtn").addEventListener("click", function () {
+    milestoneForm.hidden = !milestoneForm.hidden;
+    if (!milestoneForm.hidden) {
+      const dateField = document.getElementById("milestoneDate");
+      if (!dateField.value) dateField.value = toLocalISODate(new Date());
+      document.getElementById("milestoneName").focus();
+    }
+  });
+
+  milestoneForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const nameField = document.getElementById("milestoneName");
+    const name = nameField.value.trim();
+    const date = document.getElementById("milestoneDate").value;
+    if (!name || !date) return;
+    milestones.push({ name, date });
+    // Soonest first, so the next milestone is always on top.
+    milestones.sort((a, b) => (a.date < b.date ? -1 : 1));
+    saveSettings({ milestones });
+    nameField.value = "";
+    milestoneForm.hidden = true;
+    renderMilestones();
+  });
+
+  function removeMilestone(index) {
+    milestones.splice(index, 1);
+    saveSettings({ milestones });
+    renderMilestones();
+  }
+
+  // Countdown label: "12 days left" / "Today 🎉" / "3 days ago".
+  function milestoneCountdown(n) {
+    if (n === 0) return chrome.i18n.getMessage("milestoneToday") || "Today 🎉";
+    if (n < 0)
+      return (
+        chrome.i18n.getMessage("milestonePassed", [dayCountLabel(-n)]) || `${dayCountLabel(-n)} ago`
+      );
+    return (
+      chrome.i18n.getMessage("milestoneDaysLeft", [dayCountLabel(n)]) || `${dayCountLabel(n)} left`
+    );
+  }
+
+  function renderMilestones() {
+    const list = document.getElementById("milestoneList");
+    list.textContent = "";
+    const today = new Date();
+    const language = navigator.language || "en";
+
+    milestones.forEach(function (m, index) {
+      const target = new Date(m.date + "T00:00:00");
+      const left = daysUntil(target, today);
+
+      const item = document.createElement("li");
+      item.className = "milestone";
+
+      const name = document.createElement("span");
+      name.className = "ms-name";
+      name.textContent = m.name;
+      name.title = m.name;
+
+      const date = document.createElement("span");
+      date.className = "ms-date";
+      date.textContent = new Intl.DateTimeFormat(language, {
+        day: "numeric",
+        month: "short",
+        year: target.getFullYear() === today.getFullYear() ? undefined : "numeric",
+      }).format(target);
+
+      const days = document.createElement("span");
+      days.className = "ms-days";
+      days.classList.toggle("is-today", left === 0);
+      days.classList.toggle("is-past", left < 0);
+      days.textContent = milestoneCountdown(left);
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "ms-del";
+      del.textContent = "×";
+      const removeLabel = chrome.i18n.getMessage("removeMilestone") || "Remove milestone";
+      del.title = removeLabel;
+      del.setAttribute("aria-label", removeLabel);
+      del.addEventListener("click", () => removeMilestone(index));
+
+      item.append(name, date, days, del);
+      list.appendChild(item);
+    });
+  }
 
   function displayWeekFromDate(date, updateWeekNumberDisplay = true) {
     const startOfWeek = getWeekStart(date, weekStartDay());

@@ -7,15 +7,46 @@
   </head>
   <body>
     <main class="card">
-      <!-- Hero: big week number + the focused date/day -->
+      <!-- Hero: big week number (+ days left in week, copy) | day + date (copy) -->
       <header class="hero">
         <div class="hero-week">
-          <span class="hero-kicker" data-i18n="labelWeek">Week</span>
-          <span id="weekNumberDisplay" class="hero-number">–</span>
+          <div class="hero-week-top">
+            <span class="hero-kicker" data-i18n="labelWeek">Week</span>
+            <span id="weekNumberDisplay" class="hero-number">–</span>
+            <button
+              type="button"
+              id="copyWeekBtn"
+              class="copy-btn"
+              data-i18n-title="copyWeek"
+              title="Copy week"
+              aria-label="Copy week"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="12" height="12" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          </div>
+          <div id="daysLeftWeek" class="hero-sub"></div>
         </div>
         <div class="hero-meta">
           <div id="dayDisplay" class="hero-day"></div>
-          <div id="dateDisplay" class="hero-date"></div>
+          <div class="hero-date-row">
+            <div id="dateDisplay" class="hero-date"></div>
+            <button
+              type="button"
+              id="copyDateBtn"
+              class="copy-btn"
+              data-i18n-title="copyDate"
+              title="Copy date"
+              aria-label="Copy date"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="9" y="9" width="12" height="12" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -30,15 +61,19 @@
         <div class="day" id="day7"></div>
       </section>
 
-      <!-- Year in weeks: one tick per week, current week glowing, click to jump -->
+      <!-- Year in weeks: one tick per week, current week glowing, click to jump.
+           Year stats (days left + % elapsed) live right under their strip. -->
       <section class="year-section" aria-label="Weeks of the year">
         <div id="yearStrip" class="year-strip"></div>
-        <div id="yearProgress" class="year-progress"></div>
+        <div class="year-meta">
+          <span id="daysLeftYear" class="year-days-left"></span>
+          <span id="yearProgress" class="year-progress"></span>
+        </div>
       </section>
 
-      <!-- Controls -->
+      <!-- Controls: date + week inputs, round Today + icon-color buttons, one row -->
       <section class="controls">
-        <div class="control">
+        <div class="control control--date">
           <label for="dateInput" data-i18n="labelDate">Date</label>
           <input type="date" id="dateInput" />
         </div>
@@ -46,52 +81,60 @@
           <label for="weekInput" data-i18n="labelWeek">Week</label>
           <input type="number" id="weekInput" min="1" max="53" placeholder="5" />
         </div>
-        <div class="control control--auto">
-          <span class="control-spacer"></span>
-          <button type="button" id="resetButton" class="btn btn--primary" data-i18n="labelToday">
-            Today
-          </button>
-        </div>
-        <div class="control control--narrow">
-          <label for="iconColor" data-i18n="labelIconColor">Icon color</label>
-          <input type="color" id="iconColor" value="#000000" />
-        </div>
+        <button
+          type="button"
+          id="resetButton"
+          class="btn btn--primary btn--icon"
+          data-i18n-title="labelToday"
+          title="Today"
+          aria-label="Today"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 2.6-6.4M3 3v5.6h5.6" />
+            <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
+        <input
+          type="color"
+          id="iconColor"
+          value="#000000"
+          data-i18n-title="labelIconColor"
+          title="Icon color"
+        />
       </section>
 
-      <!-- Footer: days remaining (info) + copy actions -->
-      <footer class="footer">
-        <div class="stats">
-          <span id="daysLeftWeek" class="chip"></span>
-          <span id="daysLeftYear" class="chip"></span>
-        </div>
-        <div class="actions">
+      <!-- Milestones: user-defined countdowns (name + date → days left) -->
+      <section class="milestones" aria-label="Milestones">
+        <div class="milestones-header">
+          <span class="section-label" data-i18n="milestonesLabel">Milestones</span>
           <button
             type="button"
-            id="copyWeekBtn"
-            class="icon-btn"
-            data-i18n-title="copyWeek"
-            title="Copy week"
-            aria-label="Copy week"
+            id="addMilestoneBtn"
+            class="copy-btn"
+            data-i18n-title="addMilestone"
+            title="Add milestone"
+            aria-label="Add milestone"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 9h14M5 15h14M9 4 7 20M17 4l-2 16" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            id="copyDateBtn"
-            class="icon-btn"
-            data-i18n-title="copyDate"
-            title="Copy date"
-            aria-label="Copy date"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="16" rx="2" />
-              <path d="M3 9h18M8 3v4M16 3v4" />
+              <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
         </div>
-      </footer>
+        <ul id="milestoneList" class="milestone-list"></ul>
+        <form id="milestoneForm" class="milestone-form" hidden>
+          <input
+            type="text"
+            id="milestoneName"
+            maxlength="30"
+            data-i18n-placeholder="milestoneNamePlaceholder"
+            placeholder="e.g. Launch"
+          />
+          <input type="date" id="milestoneDate" />
+          <button type="submit" class="btn btn--primary btn--sm" data-i18n="milestoneAdd">
+            Add
+          </button>
+        </form>
+      </section>
     </main>
 
     <script type="module" src="popup.js"></script>
