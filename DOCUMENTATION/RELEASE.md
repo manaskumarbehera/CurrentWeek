@@ -100,5 +100,9 @@ Learned during the v1.13 release (2026-07-02):
   certification), save, then re-run the publish. The uploaded draft is kept,
   so re-running the workflow with `dry_run=false, stores=chrome` (or clicking
   **Submit for review** in the console) finishes the release.
+  This step **cannot be browser-automated**: Chrome blocks extensions from
+  scripting `chrome.google.com/webstore*`, and Google sign-in rejects
+  DevTools/CDP-controlled browsers ("This browser or app may not be secure").
+  It must be done by hand in a normal browser session.
 - **Retrying one store only**: manual runs accept `stores=all|chrome|edge`,
   so a failed store can be retried without re-submitting the other.
